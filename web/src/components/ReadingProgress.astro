@@ -1,0 +1,49 @@
+---
+/* 阅读进度条：固定在视口最顶部，模拟浏览器地址栏加载条，随文章滚动推进 */
+---
+
+<div
+  id="reading-progress"
+  class="pointer-events-none fixed top-0 left-0 z-[100] h-[3px] w-0 bg-accent transition-[width] duration-100 ease-out"
+  aria-hidden="true"
+></div>
+
+<script>
+  function updateReadingProgress() {
+    const bar = document.getElementById("reading-progress");
+    if (!bar) return;
+
+    const scrollTop =
+      window.scrollY || document.documentElement.scrollTop || 0;
+    const docHeight = document.documentElement.scrollHeight;
+    const winHeight = window.innerHeight;
+    const scrollable = docHeight - winHeight;
+
+    // 页面无需滚动时直接显示满格
+    const progress =
+      scrollable > 0 ? Math.min(scrollTop / scrollable, 1) : 1;
+
+    bar.style.width = `${progress * 100}%`;
+  }
+
+  function initReadingProgress() {
+    updateReadingProgress();
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        updateReadingProgress();
+        ticking = false;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", updateReadingProgress);
+  }
+
+  // 首屏加载与视图过渡后都重新初始化
+  initReadingProgress();
+  document.addEventListener("astro:page-load", initReadingProgress);
+</script>

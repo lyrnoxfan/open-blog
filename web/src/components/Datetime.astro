@@ -1,0 +1,36 @@
+---
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import { SITE } from "@/config";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+type Props = {
+  class?: string;
+  size?: "sm" | "lg";
+  pubDatetime: string | Date;
+  timezone?: string;
+  modDatetime?: string | Date | null;
+};
+
+const {
+  pubDatetime,
+  size = "sm",
+  class: className = "",
+  timezone: postTimezone,
+} = Astro.props;
+
+// 用户明确不想要「更新于」显示：只展示发布时间
+const datetime = dayjs(pubDatetime).tz(postTimezone || SITE.timezone);
+
+const date = datetime.format("MMM D, YYYY");
+---
+
+<div class:list={["flex items-center gap-x-2 opacity-80", className]}>
+  <time
+    class:list={["text-sm", { "sm:text-base": size === "lg" }]}
+    datetime={datetime.toISOString()}>{date}</time
+  >
+</div>

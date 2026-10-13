@@ -1,0 +1,183 @@
+---
+import { render, type CollectionEntry } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Datetime from "@/components/Datetime.astro";
+import EditPost from "@/components/EditPost.astro";
+import BackButton from "@/components/BackButton.astro";
+import BackToTopButton from "@/components/BackToTopButton.astro";
+import ReadingProgress from "@/components/ReadingProgress.astro";
+import { getPath } from "@/utils/getPath";
+import { slugifyStr } from "@/utils/slugify";
+import { countWords } from "@/utils/countWords";
+import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
+import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
+import { SITE } from "@/config";
+
+type Props = {
+  post: CollectionEntry<"blog">;
+  posts: CollectionEntry<"blog">[];
+};
+
+const { post, posts } = Astro.props;
+
+const {
+  title,
+  author,
+  description,
+  ogImage: initOgImage,
+  canonicalURL,
+  pubDatetime,
+  modDatetime,
+  timezone,
+  hideEditPost,
+} = post.data;
+
+const { Content } = await render(post);
+
+let ogImageUrl: string | undefined;
+
+if (typeof initOgImage === "string") {
+  ogImageUrl = initOgImage;
+} else if (initOgImage?.src) {
+  ogImageUrl = initOgImage.src;
+}
+
+if (!ogImageUrl && SITE.dynamicOgImage) {
+  ogImageUrl = `${getPath(post.id, post.filePath)}/index.png`;
+}
+
+const ogImage = ogImageUrl
+  ? new URL(ogImageUrl, Astro.url.origin).href
+  : undefined;
+
+const layoutProps = {
+  title: `${title} | ${SITE.title}`,
+  author,
+  description,
+  pubDatetime,
+  modDatetime,
+  canonicalURL,
+  ogImage,
+  scrollSmooth: true,
+};
+
+const allPosts = posts.map(({ data: { title }, id, filePath }) => ({
+  id,
+  title,
+  filePath,
+}));
+
+const currentPostIndex = allPosts.findIndex(a => a.id === post.id);
+
+const prevPost = currentPostIndex !== 0 ? allPosts[currentPostIndex - 1] : null;
+const nextPost =
+  currentPostIndex !== allPosts.length ? allPosts[currentPostIndex + 1] : null;
+
+// 本篇文章字数（构建时计算）
+const wordCount = countWords(post.body);
+---
+
+<Layout {...layoutProps}>
+  <ReadingProgress />
+  <Header />
+  <BackButton />
+
+  <main
+    id="main-content"
+    class:list={["app-layout pb-12", { "mt-8": !SITE.showBackButton }]}
+    data-pagefind-body
+  >
+    <h1
+      transition:name={slugifyStr(title.replaceAll(".", "-"))}
+      class="inline-block text-2xl font-bold text-accent sm:text-3xl"
+    >
+      {title}
+    </h1>
+
+    <div class="my-2 flex items-center gap-2">
+      <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
+      <span aria-hidden="true" class="text-sm opacity-60">·</span>
+      <span class="text-sm tabular-nums opacity-70">
+        约 {wordCount.toLocaleString("zh-CN")} 字
+      </span>
+      <span
+        aria-hidden="true"
+        class:list={[
+          "max-sm:hidden",
+          { hidden: !SITE.editPost.enabled || hideEditPost },
+        ]}
+        >|
+      </span>
+      <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+    </div>
+
+    {
+      post.data.tags && post.data.tags.length > 0 && (
+        <div class="mt-1 flex flex-wrap gap-2" data-pagefind-ignore>
+          {post.data.tags.map(tag => (
+            <a
+              href={`/tags/${slugifyStr(tag)}/`}
+              class="rounded-full border border-border px-3 py-0.5 text-sm text-foreground/80 transition-colors hover:border-accent hover:text-accent"
+            >
+              #{tag}
+            </a>
+          ))}
+        </div>
+      )
+    }
+
+    <article
+      id="article"
+      class="app-prose mt-8 w-full max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"
+    >
+      <Content />
+    </article>
+
+    <hr class="my-8 border-dashed" />
+
+    <EditPost class="sm:hidden" {hideEditPost} {post} />
+
+    <BackToTopButton />
+
+    <hr class="my-6 border-dashed" />
+
+    <div data-pagefind-ignore class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {
+        prevPost && (
+          <a
+            href={getPath(prevPost.id, prevPost.filePath)}
+            class="flex w-full items-center gap-2 card-soft card-soft-hover"
+          >
+            <IconChevronLeft class="inline-block flex-none text-accent rtl:rotate-180" />
+            <div class="min-w-0">
+              <span class="text-xs opacity-60">上一篇文章</span>
+              <div class="truncate text-sm font-medium">{prevPost.title}</div>
+            </div>
+          </a>
+        )
+      }
+
+      {
+        nextPost && (
+          <a
+            href={getPath(nextPost.id, nextPost.filePath)}
+            class="flex w-full items-center justify-end gap-2 card-soft card-soft-hover text-end sm:col-start-2"
+          >
+            <div class="min-w-0">
+              <span class="text-xs opacity-60">下一篇文章</span>
+              <div class="truncate text-sm font-medium">{nextPost.title}</div>
+            </div>
+            <IconChevronRight class="inline-block flex-none text-accent rtl:rotate-180" />
+          </a>
+        )
+      }
+    </div>
+
+    <!-- ⭐⭐⭐ 评论区插槽（关键修复） -->
+    <slot />
+  </main>
+
+  <Footer />
+</Layout>

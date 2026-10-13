@@ -1,0 +1,103 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import LinkButton from "@/components/LinkButton.astro";
+import SiteStats from "@/components/SiteStats.astro";
+import WisteriaBanner from "@/components/WisteriaBanner.astro";
+import getSortedPosts from "@/utils/getSortedPosts";
+import { getPath } from "@/utils/getPath";
+import { SITE } from "@/config";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import dayjs from "dayjs";
+
+const posts = await getCollection("blog");
+const sortedPosts = getSortedPosts(posts);
+
+// 置顶逻辑：有置顶文章时，置顶区显示置顶的文章；无置顶时显示最新一篇
+const pinnedPosts = sortedPosts.filter(post => post.data.pinned);
+const hasPinned = pinnedPosts.length > 0;
+const featuredPosts = hasPinned ? pinnedPosts : sortedPosts.slice(0, 1);
+const listPosts = hasPinned
+  ? sortedPosts.filter(p => !p.data.pinned).slice(0, SITE.postPerIndex)
+  : sortedPosts.slice(1, SITE.postPerIndex + 1);
+
+// 日期格式化：10月11日
+const fmtDay = (d: string | Date) => {
+  const dt = dayjs(d);
+  return `${dt.month() + 1}月${dt.date()}日`;
+};
+---
+
+<Layout>
+  <Header />
+  <WisteriaBanner />
+  <main id="main-content" data-layout="index" class="app-layout">
+    {
+      featuredPosts.length > 0 && (
+        <div class="mb-10 space-y-8 pt-8 pb-2">
+          {featuredPosts.map(post => (
+            <article>
+              <a href={getPath(post.id, post.filePath)} class="group block">
+                <span class="mb-3 inline-block rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
+                  {post.data.pinned ? "置顶" : "最新"}
+                </span>
+                <h1 class="mb-2 text-2xl leading-snug font-bold transition-colors group-hover:text-accent sm:text-3xl">
+                  {post.data.title}
+                </h1>
+                {post.data.description && (
+                  <p class="line-clamp-2 text-sm leading-relaxed opacity-60">
+                    {post.data.description}
+                  </p>
+                )}
+              </a>
+            </article>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      listPosts.length > 0 && (
+        <section class="space-y-8 pb-6">
+          {listPosts.map(post => (
+            <article>
+              <a href={getPath(post.id, post.filePath)} class="group block">
+                <h2 class="mb-1 text-lg leading-snug font-medium text-accent">
+                  {post.data.title}
+                </h2>
+                <time class="block text-sm opacity-60">
+                  {fmtDay(post.data.pubDatetime)}
+                </time>
+              </a>
+            </article>
+          ))}
+        </section>
+      )
+    }
+
+    <div class="my-8 text-center">
+      <LinkButton href="/posts/">
+        所有文章
+        <IconArrowRight class="inline-block rtl:-rotate-180" />
+      </LinkButton>
+    </div>
+
+    <SiteStats />
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  function setBackUrl() {
+    const indexLayout = (document.querySelector("#main-content") as HTMLElement)
+      ?.dataset?.layout;
+    if (indexLayout) {
+      sessionStorage.setItem("backUrl", "/");
+    }
+  }
+
+  setBackUrl();
+  document.addEventListener("astro:page-load", setBackUrl);
+</script>

@@ -1,0 +1,225 @@
+---
+
+---
+
+<div id="tcomment" aria-busy="true"></div>
+
+<script is:inline>
+  (() => {
+    const CONTAINER_ID = "tcomment";
+    const SCRIPT_ID = "twikoo-script";
+    const STYLE_ID = "twikoo-style";
+    const TWIKOO_SRC_LIST = [
+      "https://cdn.staticfile.org/twikoo/1.6.44/twikoo.all.min.js",
+      "https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.all.min.js",
+      "https://unpkg.com/twikoo@1.6.44/dist/twikoo.all.min.js",
+    ];
+    const TWIKOO_STYLE_LIST = [
+      "https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.css",
+      "https://unpkg.com/twikoo@1.6.44/dist/twikoo.css",
+    ];
+    const ENV_ID = "https://your-twikoo.example.com"; // 换成你的 Twikoo 服务地址
+    const LANG = "zh-CN";
+    const EMPTY_HINT_HTML =
+      '<p style="color:#b91c1c;font-size:.95rem;">评论区暂时不可用，请检查 Twikoo envId 或网络连接。</p>';
+
+    function loadStyle(href) {
+      return new Promise((resolve, reject) => {
+        const existing = document.getElementById(STYLE_ID);
+        if (existing) {
+          resolve(existing);
+          return;
+        }
+
+        const link = document.createElement("link");
+        link.id = STYLE_ID;
+        link.rel = "stylesheet";
+        link.href = href;
+        link.dataset.astroTransitionPersist = "";
+        link.onload = () => resolve(link);
+        link.onerror = () => {
+          link.remove();
+          reject(new Error("Twikoo 样式加载失败"));
+        };
+        document.head.appendChild(link);
+      });
+    }
+
+    async function ensureTwikooStyle() {
+      if (document.getElementById(STYLE_ID)) return;
+
+      let lastError;
+      for (const href of TWIKOO_STYLE_LIST) {
+        try {
+          await loadStyle(href);
+          return;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      throw lastError ?? new Error("Twikoo 样式加载失败");
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        if (window.twikoo?.init) {
+          resolve(window.twikoo);
+          return;
+        }
+
+        const previous = document.getElementById(SCRIPT_ID);
+        if (previous) previous.remove();
+
+        const script = document.createElement("script");
+        script.id = SCRIPT_ID;
+        script.src = src;
+        script.async = true;
+        script.dataset.astroTransitionPersist = "";
+
+        script.onload = () => {
+          if (window.twikoo?.init) {
+            resolve(window.twikoo);
+          } else {
+            reject(new Error("Twikoo 未挂载到 window"));
+          }
+        };
+
+        script.onerror = () => reject(new Error("Twikoo 脚本加载失败"));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function loadTwikooScript() {
+      if (window.twikoo?.init) return window.twikoo;
+
+      let lastError;
+      for (const src of TWIKOO_SRC_LIST) {
+        try {
+          return await loadScript(src);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      throw lastError ?? new Error("Twikoo 加载失败");
+    }
+
+    async function initTwikoo() {
+      const container = document.getElementById(CONTAINER_ID);
+      if (!container) return;
+
+      try {
+        await ensureTwikooStyle();
+        const twikoo = await loadTwikooScript();
+
+        container.innerHTML = "";
+
+        await twikoo.init({
+          envId: ENV_ID,
+          el: `#${CONTAINER_ID}`,
+          path: location.pathname.replace(/\/$/, ""),
+          lang: LANG,
+        });
+
+        await revealWhenReady(container);
+
+        window.setTimeout(() => {
+          if (!container.hasChildNodes() || container.innerHTML.trim() === "") {
+            container.innerHTML = EMPTY_HINT_HTML;
+          }
+        }, 1200);
+      } catch {
+        container.innerHTML = EMPTY_HINT_HTML;
+        reveal(container);
+      }
+    }
+
+    function reveal(container) {
+      container.classList.add("twikoo-ready");
+      container.removeAttribute("aria-busy");
+    }
+
+    function hasVisibleLegacyFields(container) {
+      const fields = container.querySelectorAll(
+        'input[name="nick"], input[name="mail"], input[name="link"], input[placeholder*="昵称"], input[placeholder*="邮箱"], input[placeholder*="网址"]'
+      );
+      return [...fields].some(field => {
+        const style = getComputedStyle(field);
+        return style.display !== "none" && style.visibility !== "hidden";
+      });
+    }
+
+    function revealWhenReady(container) {
+      return new Promise(resolve => {
+        let finished = false;
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          observer.disconnect();
+          clearTimeout(fallback);
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              reveal(container);
+              resolve();
+            })
+          );
+        };
+        const check = () => {
+          if (container.hasChildNodes() && !hasVisibleLegacyFields(container)) {
+            finish();
+          }
+        };
+        const observer = new MutationObserver(check);
+        observer.observe(container, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ["class", "style"],
+        });
+        const fallback = window.setTimeout(finish, 10000);
+        check();
+      });
+    }
+
+    initTwikoo();
+  })();
+</script>
+
+<style>
+  #tcomment {
+    margin-top: 2.5rem;
+    min-height: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #tcomment.twikoo-ready {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Twikoo 与本站设计语言统一：圆角、柔和边框、强调色 */
+  #tcomment :global(.tk-input),
+  #tcomment :global(.tk-textarea) {
+    border-radius: 1rem !important;
+    border-color: var(--border) !important;
+  }
+  #tcomment :global(.tk-input:focus),
+  #tcomment :global(.tk-textarea:focus) {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.12) !important;
+  }
+  #tcomment :global(.tk-submit) {
+    border-radius: 999px !important;
+  }
+  #tcomment :global(.tk-comment) {
+    border-radius: 1rem !important;
+  }
+  #tcomment :global(.tk-avatar) {
+    border-radius: 999px !important;
+  }
+  #tcomment :global(a) {
+    color: var(--accent) !important;
+  }
+</style>

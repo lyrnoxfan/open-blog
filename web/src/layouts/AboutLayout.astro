@@ -1,0 +1,42 @@
+---
+import type { MarkdownLayoutProps } from "astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Layout from "./Layout.astro";
+import { SITE } from "@/config";
+
+type Props = MarkdownLayoutProps<{ title: string }>;
+
+const { frontmatter } = Astro.props;
+---
+
+<Layout title={`${frontmatter.title} | ${SITE.title}`}>
+  <Header />
+
+  <!-- 如果你不想要面包屑，直接删掉这一行 -->
+  <Breadcrumb />
+
+  <main id="main-content" class="app-layout">
+    <section
+      id="about"
+      class="
+        mb-28
+        max-w-app
+        prose
+        prose-neutral
+        dark:prose-invert
+        max-w-none
+        prose-img:border-0
+      "
+    >
+      <!-- 让 prose 接管标题样式 -->
+      <h1>{frontmatter.title}</h1>
+
+      <!-- Markdown 正文 -->
+      <slot />
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

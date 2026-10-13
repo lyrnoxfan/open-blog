@@ -1,0 +1,191 @@
+@plugin "@tailwindcss/typography";
+
+@layer base {
+  /* ===== Override default Tailwind Typography styles ===== */
+  .app-prose {
+    @apply prose;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    th {
+      @apply mb-3 text-foreground;
+    }
+
+    h3 {
+      @apply italic;
+    }
+
+    p,
+    strong,
+    ol,
+    ul,
+    figcaption,
+    table,
+    code {
+      @apply text-foreground;
+    }
+
+    a {
+      @apply wrap-break-word text-foreground decoration-dashed underline-offset-4 hover:text-accent focus-visible:no-underline;
+    }
+
+    ul {
+      @apply overflow-x-clip;
+    }
+
+    li {
+      @apply marker:text-accent;
+    }
+
+    hr {
+      @apply border-border;
+    }
+
+    img {
+      @apply mx-auto border border-border rounded-lg shadow-sm;
+    }
+
+    figcaption {
+      @apply opacity-75;
+    }
+
+    table {
+      th,
+      td {
+        @apply border border-border p-2;
+      }
+
+      th {
+        @apply py-1.5;
+      }
+
+      code {
+        @apply break-all sm:break-normal;
+      }
+    }
+
+    code {
+      @apply rounded bg-muted/75 p-1 wrap-break-word text-foreground before:content-none after:content-none;
+    }
+
+    .astro-code code {
+      @apply flex-[1_0_100%] bg-inherit p-0;
+    }
+
+    blockquote {
+      @apply border-s-accent/80 wrap-break-word opacity-80 italic pl-4 my-6;
+    }
+
+    details {
+      @apply inline-block cursor-pointer text-foreground select-none [&_p]:hidden [&_ul]:my-0!;
+    }
+
+    summary {
+      @apply focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:outline-dashed;
+    }
+
+    pre {
+      @apply focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-dashed;
+    }
+
+    /* ===== Typography Enhancements ===== */
+    h1 {
+      @apply text-3xl font-bold mb-6;
+    }
+
+    h2 {
+      @apply text-2xl font-semibold mt-10 mb-4;
+    }
+
+    h3 {
+      @apply text-xl font-medium mt-8 mb-3;
+    }
+
+    p {
+      @apply leading-7 my-4;
+    }
+
+    ul,
+    ol {
+      @apply my-4;
+    }
+  }
+
+  /* ===== Code Blocks & Syntax Highlighting ===== */
+  .astro-code {
+    @apply flex border bg-(--shiki-light-bg) text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
+  }
+
+  html[data-theme="dark"] .astro-code {
+    @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
+  }
+
+  /* Styles for Shiki transformers */
+  .astro-code {
+    .line.diff.add {
+      @apply relative inline-block w-full bg-green-400/20 before:absolute before:-left-3 before:text-green-500 before:content-['+'];
+    }
+    .line.diff.remove {
+      @apply relative inline-block w-full bg-red-500/20 before:absolute before:-left-3 before:text-red-500 before:content-['-'];
+    }
+    .line.highlighted {
+      @apply inline-block w-full bg-slate-400/20;
+    }
+    .highlighted-word {
+      @apply rounded-sm border border-border px-0.5 py-px;
+    }
+  }
+}
+
+/* ===== Dock-inspired reading surfaces ===== */
+.app-prose h1,
+.app-prose h2,
+.app-prose h3,
+.app-prose h4 {
+  letter-spacing: -0.018em;
+  text-wrap: pretty;
+}
+
+.app-prose p,
+.app-prose li {
+  line-height: 1.85;
+}
+
+.app-prose blockquote {
+  padding: 0.7rem 1rem;
+  border-radius: 0 1rem 1rem 0;
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+}
+
+.app-prose pre {
+  overflow-x: auto;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.app-prose img {
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(37, 82, 117, 0.08);
+}
+
+.app-prose table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 0.9rem;
+}
+
+.app-prose th {
+  background: var(--muted);
+}
+
+.app-prose th,
+.app-prose td {
+  border-color: var(--border);
+}
+
+.app-prose a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}

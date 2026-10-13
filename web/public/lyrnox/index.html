@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <title>写作台</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --text: #1f2a44;
+        --muted: #9aa5c4;
+        --muted2: #6d7ba0;
+        --blue: #5b8def;
+        --pink: #f472b6;
+        --green: #16a34a;
+        --amber: #f59e0b;
+        --danger: #e11d48;
+        --card: #e8ffffff;
+        --glass: #e6ffffff;
+        --line: #b3ffffff;
+        --shadow: 0 12px 32px rgba(148, 163, 214, 0.2);
+        --shadow-sm: 0 4px 16px rgba(91, 141, 239, 0.1);
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          "PingFang SC",
+          "Hiragino Sans GB",
+          "Microsoft YaHei",
+          sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        /* 照搬 App v1.1.1 bg_gradient：Android 135° = CSS to top left */
+        background: linear-gradient(
+            to top left,
+            #e3edff 0%,
+            #f4eaf9 52%,
+            #fde7f1 100%
+          )
+          fixed;
+        color: var(--text);
+      }
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .view {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 0 48px;
+      }
+      .pillwrap,
+      .searchwrap,
+      .posts {
+        margin-left: 14px;
+        margin-right: 14px;
+      }
+      /* —— 顶部悬浮胶囊（照搬 App：14dp 边距/12dp 顶距，内边距 6dp/4dp） —— */
+      .topbar {
+        position: sticky;
+        top: 12px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 12px 14px 0;
+        background: var(--glass);
+        -webkit-backdrop-filter: blur(18px) saturate(1.3);
+        backdrop-filter: blur(18px) saturate(1.3);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        box-shadow: 0 8px 32px rgba(91, 141, 239, 0.14);
+        padding: 4px 6px;
+      }
+      .ttitle {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        margin: 0;
+        font-size: 17px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .tbtn {
+        background: none;
+        border: 0;
+        padding: 10px 12px;
+        font-size: 15px;
+        text-decoration: none;
+      }
+      .back {
+        color: var(--blue);
+      }
+      .syncbtn {
+        color: var(--pink);
+        font-weight: 700;
+      }
+      /* 保存：照搬 App，粉色文字按钮，非渐变 */
+      .savebtn {
+        background: none;
+        border: 0;
+        padding: 10px 12px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--pink);
+      }
+      /* —— 同步状态小胶囊 —— */
+      .pillwrap {
+        display: flex;
+        justify-content: center;
+        margin-top: 12px;
+      }
+      .statuspill {
+        background: var(--glass);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--green);
+        box-shadow: var(--shadow-sm);
+      }
+      .statuspill.err {
+        color: var(--danger);
+      }
+      .statuspill.syncing {
+        color: var(--blue);
+      }
+      /* —— 搜索 —— */
+      .searchwrap {
+        margin-top: 12px;
+      }
+      .search {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 14px 22px;
+        font-size: 16px;
+        background: rgba(255, 255, 255, 0.88);
+        color: inherit;
+        box-shadow: var(--shadow-sm);
+      }
+      .search:focus {
+        outline: none;
+        border-color: var(--pink);
+        box-shadow: 0 0 0 3px rgb(244 114 182 / 0.18);
+      }
+      /* —— 文章卡片（照搬 App item_article：标题行[标题+右上badge]+下方meta） —— */
+      .posts {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .post {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+        color: inherit;
+      }
+      .post:active {
+        transform: scale(0.99);
+      }
+      .post-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .post-top h3 {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .post .st {
+        flex: none;
+        padding-left: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--green);
+      }
+      .post .meta {
+        margin: 5px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .post .st.draft {
+        color: var(--amber);
+      }
+      .empty {
+        text-align: center;
+        color: var(--muted);
+        padding: 32px 0;
+      }
+      /* —— 新建悬浮按钮（照搬 App fab_bg：62dp 蓝→粉） —— */
+      .fab {
+        position: fixed;
+        right: 22px;
+        bottom: 26px;
+        width: 62px;
+        height: 62px;
+        border: 0;
+        border-radius: 50%;
+        font-size: 30px;
+        line-height: 1;
+        color: #fff;
+        background: linear-gradient(to top left, #5b8def, #f472b6);
+        box-shadow: 0 14px 34px rgba(91, 141, 239, 0.45);
+      }
+      .fab:active {
+        transform: scale(0.96);
+      }
+      /* —— 编辑视图 —— */
+      .editwrap {
+        margin: 12px 14px 0;
+        display: grid;
+        gap: 10px;
+      }
+      .statusline {
+        font-size: 13px;
+        color: var(--muted2);
+        padding: 0 6px;
+        min-height: 18px;
+      }
+      .wcountwrap {
+        display: flex;
+        justify-content: center;
+      }
+      .wcountpill {
+        background: var(--glass);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 6px 14px;
+        font-size: 12px;
+        color: var(--muted);
+        box-shadow: var(--shadow-sm);
+      }
+      .actionrow {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      /* 操作小按钮：照搬 App md_btn（白底 14dp 圆角） */
+      .chip {
+        display: inline-block;
+        border: 1px solid #e3e9f8;
+        background: #fff;
+        border-radius: 14px;
+        padding: 10px 14px;
+        font-size: 14px;
+        color: var(--text);
+        box-shadow: 0 2px 8px rgba(91, 141, 239, 0.08);
+      }
+      .chip.danger {
+        color: var(--danger);
+      }
+      /* 表单：照搬 App，单卡片，label 13sp #6D7BA0，输入框 md_btn */
+      .formcard {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+      }
+      .field label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted2);
+        margin-bottom: 4px;
+      }
+      .field input {
+        width: 100%;
+        border: 1px solid #e3e9f8;
+        border-radius: 14px;
+        padding: 10px;
+        font-size: 14px;
+        background: #fff;
+        color: inherit;
+      }
+      .field input#title {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .field input:focus {
+        outline: none;
+        border-color: var(--pink);
+        box-shadow: 0 0 0 3px rgb(244 114 182 / 0.18);
+      }
+      /* —— 标签自动补全下拉 —— */
+      .tagfield {
+        position: relative;
+      }
+      .tagsuggest {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        margin-top: 4px;
+        background: #fff;
+        border: 1px solid #e3e9f8;
+        border-radius: 14px;
+        box-shadow: 0 12px 32px rgba(91, 141, 239, 0.18);
+        max-height: 220px;
+        overflow: auto;
+        z-index: 20;
+        padding: 4px;
+      }
+      .tagsug {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: var(--text);
+      }
+      .tagsug:hover,
+      .tagsug.sel {
+        background: #eef3ff;
+        color: var(--blue);
+      }
+      .toggles {
+        display: flex;
+        gap: 20px;
+        font-size: 15px;
+        align-items: center;
+      }
+      .toggles input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--pink);
+      }
+      .workspace {
+        display: grid;
+        gap: 12px;
+      }
+      .markdown,
+      .preview {
+        width: 100%;
+        min-height: 340px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+        padding: 16px;
+        font-size: 15px;
+        line-height: 1.7;
+        color: inherit;
+      }
+      .markdown {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        resize: vertical;
+      }
+      .markdown:focus {
+        outline: none;
+        border-color: var(--pink);
+        box-shadow: 0 0 0 3px rgb(244 114 182 / 0.18);
+      }
+      .preview img {
+        max-width: 100%;
+      }
+      .preview pre {
+        overflow: auto;
+        padding: 12px;
+        background: #f2f4fb;
+        border-radius: 12px;
+      }
+      @media (max-width: 720px) {
+        .workspace.previewing .markdown {
+          display: none;
+        }
+        .workspace:not(.previewing) .preview {
+          display: none;
+        }
+      }
+      @media (min-width: 721px) {
+        .workspace {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --text: #e9edf9;
+          --muted: #8b93b8;
+          --muted2: #a7aecb;
+          --blue: #7ea6ff;
+          --pink: #f9a8d4;
+          --card: rgba(30, 36, 68, 0.88);
+          --glass: rgba(28, 34, 62, 0.72);
+          --line: rgba(255, 255, 255, 0.1);
+          --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+          --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+        body {
+          background: linear-gradient(
+              180deg,
+              #251b40 0%,
+              #1a1745 55%,
+              #101c42 100%
+            )
+            fixed;
+        }
+        .search,
+        .statuspill,
+        .field input,
+        .markdown,
+        .preview,
+        .formcard,
+        .chip,
+        .tagsuggest {
+          background: rgba(28, 34, 62, 0.75);
+        }
+        .field input {
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+        .tagsuggest {
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+        .tagsug:hover,
+        .tagsug.sel {
+          background: rgba(91, 141, 239, 0.18);
+        }
+        .chip {
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+        .preview pre {
+          background: rgba(0, 0, 0, 0.3);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ 文章列表 ============ -->
+    <div id="view-list" class="view">
+      <header class="topbar">
+        <a class="tbtn back" href="/">‹ 返回</a>
+        <h1 class="ttitle">✍️ 写文章</h1>
+        <button class="tbtn syncbtn" id="sync">↻ 同步</button>
+      </header>
+      <div class="pillwrap">
+        <div id="syncpill" class="statuspill">✓ 全部已同步</div>
+      </div>
+      <div class="searchwrap">
+        <input id="search" class="search" placeholder="搜索文章…" />
+      </div>
+      <div class="posts" id="posts"></div>
+      <button id="new" class="fab" aria-label="写新文章">+</button>
+    </div>
+
+    <!-- ============ 编辑器 ============ -->
+    <div id="view-edit" class="view hidden">
+      <header class="topbar">
+        <button class="tbtn back" id="back">‹ 返回</button>
+        <h1 class="ttitle" id="edittitle">新文章</h1>
+        <button class="savebtn" id="save">💾 保存</button>
+      </header>
+      <div class="editwrap">
+        <div class="statusline"><span id="status">正在载入…</span></div>
+        <div class="formcard">
+          <div class="field">
+            <label>Slug（文件名）</label><input id="slug" maxlength="120" />
+          </div>
+          <div class="field">
+            <label>标题</label><input id="title" maxlength="160" />
+          </div>
+          <div class="field">
+            <label>简介</label><input id="description" maxlength="500" />
+          </div>
+          <div class="field tagfield">
+            <label>标签（逗号或空格分隔，可从已有标签补全）</label
+            ><input id="tags" maxlength="200" autocomplete="off" />
+            <div id="tagsuggest" class="tagsuggest hidden"></div>
+          </div>
+          <div class="field">
+            <label>发布日期</label><input id="date" type="datetime-local" />
+          </div>
+          <div class="toggles">
+            <label><input id="draft" type="checkbox" /> 存为草稿（不公开展示）</label>
+            <label><input id="pinned" type="checkbox" /> 置顶</label>
+          </div>
+        </div>
+        <div class="actionrow">
+          <button class="chip" id="mode">预览</button>
+          <label class="chip" for="image">上传图片</label>
+          <input
+            class="hidden"
+            id="image"
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp,image/avif"
+          />
+          <button class="chip danger" id="delete">删除</button>
+        </div>
+        <div class="workspace" id="workspace">
+          <textarea
+            class="markdown"
+            id="markdown"
+            spellcheck="true"
+            placeholder="Markdown 正文…"
+          ></textarea>
+          <article class="preview" id="preview"></article>
+        </div>
+        <div class="wcountwrap"><span class="wcountpill" id="wcount"></span></div>
+      </div>
+    </div>
+
+    <script type="module">
+      const $ = id => document.getElementById(id),
+        state = {
+          articles: [],
+          slug: null,
+          sha: null,
+          rawHeader: [],
+          existing: false,
+          wasDraft: false,
+        };
+      const fields = [
+        "title",
+        "slug",
+        "description",
+        "tags",
+        "date",
+        "draft",
+        "pinned",
+        "markdown",
+      ];
+      // 文章列表本地缓存：进写作台不再自动拉取，只在点 ↻ 同步时刷新
+      // v2：缓存结构新增 tags（全站标签，供自动补全用）
+      const LIST_CACHE_KEY = "lyrnox-articles-cache-v2";
+      function fmtSyncTime(ts) {
+        if (!ts) return "";
+        const d = new Date(ts);
+        const z = n => String(n).padStart(2, "0");
+        return `${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+      }
+      // 从文章列表的 tags 字段收集全站标签（API 没返回 tags 时的兜底）
+      function collectTags(articles) {
+        const set = new Set();
+        for (const a of articles || [])
+          for (const t of a.tags || []) set.add(t);
+        return [...set].sort((a, b) => a.localeCompare(b, "zh-CN"));
+      }
+      function saveCachedList() {
+        try {
+          localStorage.setItem(
+            LIST_CACHE_KEY,
+            JSON.stringify({
+              articles: state.articles,
+              tags: state.allTags || [],
+              syncedAt: Date.now(),
+            })
+          );
+        } catch {}
+        state.hasCache = true;
+      }
+      function loadCachedList() {
+        try {
+          const raw = localStorage.getItem(LIST_CACHE_KEY);
+          if (!raw) return false;
+          const data = JSON.parse(raw);
+          if (!Array.isArray(data.articles)) return false;
+          state.articles = data.articles;
+          state.allTags =
+            Array.isArray(data.tags) && data.tags.length
+              ? data.tags
+              : collectTags(data.articles);
+          state.hasCache = true;
+          draw();
+          const t = fmtSyncTime(data.syncedAt);
+          setPill(t ? `✓ 全部已同步 · ${t}` : "✓ 全部已同步");
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      function showList() {
+        $("view-list").classList.remove("hidden");
+        $("view-edit").classList.add("hidden");
+        window.scrollTo(0, 0);
+      }
+      function showEdit() {
+        $("view-edit").classList.remove("hidden");
+        $("view-list").classList.add("hidden");
+        window.scrollTo(0, 0);
+      }
+      function setPill(text, mode = "ok") {
+        const p = $("syncpill");
+        p.textContent = text;
+        p.classList.toggle("err", mode === "err");
+        p.classList.toggle("syncing", mode === "syncing");
+      }
+      function fmtTime(iso) {
+        const d = new Date(iso);
+        if (Number.isNaN(+d)) return "";
+        const z = n => String(n).padStart(2, "0");
+        return `${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+      }
+      function countWords(text) {
+        const cjk = (
+          text.match(/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/g) ||
+          []
+        ).length;
+        const rest = text.replace(
+          /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/g,
+          " "
+        );
+        const words = (
+          rest.match(/[A-Za-z0-9]+(?:['’][A-Za-z0-9]+)*/g) || []
+        ).length;
+        return cjk + words;
+      }
+      function updateCount() {
+        const n = countWords($("markdown").value);
+        $("wcount").textContent = n ? `约 ${n.toLocaleString("zh-CN")} 字` : "";
+      }
+      function status(text, error = false) {
+        $("status").textContent = text;
+        $("status").style.color = error ? "var(--danger)" : "";
+      }
+      function esc(s) {
+        return String(s ?? "").replace(
+          /[&<>"']/g,
+          c =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c]
+        );
+      }
+      function render(md) {
+        // 先把围栏代码块摘出来占位，避免行内规则污染代码内容
+        const codes = [];
+        let s = esc(md).replace(
+          /^```[^\n]*\r?\n([\s\S]*?)^```[ \t]*$/gm,
+          (m, code) => {
+            codes.push(`<pre><code>${code.replace(/\r?\n$/, "")}</code></pre>`);
+            return `\u0000${codes.length - 1}\u0000`;
+          }
+        );
+        s = s
+          .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+          .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+          .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+          .replace(
+            /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,
+            '<img alt="$1" src="$2" loading="lazy">'
+          )
+          .replace(
+            /\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,
+            (m, text, url) =>
+              /^https?:\/\//i.test(url)
+                ? `<a href="${url}" rel="noopener noreferrer" target="_blank">${text}</a>`
+                : `<a href="${url}">${text}</a>`
+          )
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/`([^`\n]+)`/g, "<code>$1</code>");
+        // 逐行组装：块级元素独占一行，连续列表包 <ul>，其余按空行分段
+        const lines = s.split("\n");
+        let html = "",
+          inList = false,
+          inQuote = false;
+        const para = [];
+        const flushPara = () => {
+          if (para.length) {
+            html += `<p>${para.join("<br>")}</p>`;
+            para.length = 0;
+          }
+        };
+        const closeBlocks = () => {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          if (inQuote) {
+            html += "</blockquote>";
+            inQuote = false;
+          }
+        };
+        for (const line of lines) {
+          const t = line.trim();
+          if (t === "") {
+            flushPara();
+            closeBlocks();
+            continue;
+          }
+          if (/^\u0000\d+\u0000$/.test(t)) {
+            flushPara();
+            closeBlocks();
+            html += codes[Number(t.slice(1, -1))];
+            continue;
+          }
+          if (/^<h[1-3]>/.test(t) || /^<pre>/.test(t)) {
+            flushPara();
+            closeBlocks();
+            html += line;
+            continue;
+          }
+          if (/^---$/.test(t)) {
+            flushPara();
+            closeBlocks();
+            html += "<hr>";
+            continue;
+          }
+          const quote = t.match(/^&gt;\s?(.*)$/);
+          if (quote) {
+            flushPara();
+            if (inList) {
+              html += "</ul>";
+              inList = false;
+            }
+            if (!inQuote) {
+              html += "<blockquote>";
+              inQuote = true;
+            }
+            if (quote[1]) html += `<p>${quote[1]}</p>`;
+            continue;
+          }
+          const li = line.match(/^(?:- |\* )(.+)$/);
+          if (li) {
+            flushPara();
+            if (inQuote) {
+              html += "</blockquote>";
+              inQuote = false;
+            }
+            if (!inList) {
+              html += "<ul>";
+              inList = true;
+            }
+            html += `<li>${li[1]}</li>`;
+            continue;
+          }
+          para.push(line);
+        }
+        flushPara();
+        closeBlocks();
+        $("preview").innerHTML = html;
+      }
+      function parseFlowTags(v) {
+        v = v.trim();
+        if (!v.startsWith("[")) return v ? [v.replace(/^["']|["']$/g, "")] : [];
+        try {
+          const arr = JSON.parse(v);
+          if (Array.isArray(arr)) return arr.map(String).filter(Boolean);
+        } catch {}
+        // JSON 解析失败时的兜底：去括号按逗号切
+        const inner = v.slice(1, v.lastIndexOf("]") > 0 ? v.lastIndexOf("]") : undefined);
+        return inner
+          .split(",")
+          .map(s => s.trim().replace(/^["']|["']$/g, ""))
+          .filter(Boolean);
+      }
+      // 解析 frontmatter 里的 tags：支持 flow 写法 tags: ["a", "b"] 和 block 写法
+      //   tags:
+      //     - a
+      //     - b
+      function parseTags(lines) {
+        const idx = lines.findIndex(l => /^\s*tags:/.test(l));
+        if (idx < 0) return [];
+        const rest = (lines[idx].match(/^\s*tags:\s*(.*)$/) || [])[1] || "";
+        if (rest.trim()) return parseFlowTags(rest);
+        const out = [];
+        for (let i = idx + 1; i < lines.length; i++) {
+          const li = lines[i].match(/^\s*-\s+(.*)$/);
+          if (!li) break;
+          const t = li[1].trim().replace(/^["']|["']$/g, "");
+          if (t) out.push(t);
+        }
+        return out;
+      }
+      function parse(content) {
+        const m = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+        if (!m) throw Error("文章 frontmatter 无法识别");
+        const lines = m[1].split(/\r?\n/),
+          data = {};
+        for (const line of lines) {
+          const x = line.match(/^([A-Za-z][\w]*):\s*(.*)$/);
+          if (x) data[x[1]] = x[2];
+        }
+        // tags 由编辑器统一接管写入：过滤掉 tags 行及其 block 续行，避免重复
+        const raw = [];
+        let inTagsBlock = false;
+        for (const line of lines) {
+          if (/^\s*tags:\s*$/.test(line)) {
+            inTagsBlock = true;
+            continue;
+          }
+          if (inTagsBlock && /^\s*-\s/.test(line)) continue;
+          inTagsBlock = false;
+          if (
+            !/^\s*(title|description|pubDatetime|modDatetime|updatedDatetime|draft|pinned|tags):/.test(
+              line
+            )
+          )
+            raw.push(line);
+        }
+        state.rawHeader = raw;
+        $("title").value = unquote(data.title);
+        $("description").value = unquote(data.description);
+        $("tags").value = parseTags(lines).join(", ");
+        $("draft").checked = data.draft === "true";
+        // 记录打开时文件的草稿状态：草稿首次发布不算“更新”，不写 modDatetime
+        state.wasDraft = $("draft").checked;
+        $("pinned").checked = data.pinned === "true";
+        $("date").value = toLocal(unquote(data.pubDatetime));
+        $("markdown").value = m[2];
+        render(m[2]);
+        updateCount();
+      }
+      function unquote(v = "") {
+        v = v.trim();
+        if (
+          (v[0] === '"' && v.at(-1) === '"') ||
+          (v[0] === "'" && v.at(-1) === "'")
+        ) {
+          try {
+            return JSON.parse(v);
+          } catch {
+            return v.slice(1, -1);
+          }
+        }
+        return v;
+      }
+      function toLocal(v) {
+        const d = new Date(v);
+        if (Number.isNaN(+d)) return "";
+        const z = n => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+      }
+      function quote(v) {
+        return JSON.stringify(String(v));
+      }
+      function readTags() {
+        // 逗号/中文逗号/空格分隔，去重保序
+        const seen = new Set(),
+          out = [];
+        for (const t of $("tags").value.split(/[,，\s]+/)) {
+          const s = t.trim();
+          if (s && !seen.has(s)) {
+            seen.add(s);
+            out.push(s);
+          }
+        }
+        return out;
+      }
+      function content() {
+        const date = $("date").value
+          ? new Date($("date").value).toISOString()
+          : new Date().toISOString();
+        const h = [
+          `title: ${quote($("title").value.trim())}`,
+          `description: ${quote($("description").value.trim())}`,
+          `tags: ${JSON.stringify(readTags())}`,
+          `pubDatetime: ${date}`,
+          // 只有「已发布的文章被再次保存」才算更新；草稿首次发布不写 modDatetime，
+          // 否则前台会多出一个“更新于”日期
+          ...(state.existing && !state.wasDraft
+            ? [`modDatetime: ${new Date().toISOString()}`]
+            : []),
+          `draft: ${$("draft").checked}`,
+          ...($("pinned").checked ? ["pinned: true"] : []),
+          ...state.rawHeader.filter(Boolean),
+        ];
+        return `---\n${h.join("\n")}\n---\n\n${$("markdown").value.replace(/^\s+/, "")}`;
+      }
+      function draftKey() {
+        return `lyrnox-draft:${state.slug || "new"}`;
+      }
+      function autosave() {
+        localStorage.setItem(
+          draftKey(),
+          JSON.stringify(
+            Object.fromEntries(
+              fields.map(id => [
+                id,
+                $(id).type === "checkbox" ? $(id).checked : $(id).value,
+              ])
+            )
+          )
+        );
+        status("已自动保存到本机");
+      }
+      let timer;
+      for (const id of fields)
+        $(id).addEventListener("input", () => {
+          if (id === "markdown") {
+            render($(id).value);
+            updateCount();
+          }
+          if (id === "title")
+            $("edittitle").textContent = $(id).value.trim() || "新文章";
+          clearTimeout(timer);
+          timer = setTimeout(autosave, 500);
+        });
+      async function api(url, options = {}) {
+        const r = await fetch(url, {
+          ...options,
+          headers: { "X-Lyrnox-Request": "1", ...(options.headers || {}) },
+        });
+        const data = await r
+          .json()
+          .catch(() => ({ error: `HTTP ${r.status}` }));
+        if (!r.ok) {
+          const err = Error(data.error || `HTTP ${r.status}`);
+          err.status = r.status;
+          throw err;
+        }
+        return data;
+      }
+      // —— 标签自动补全：从全站已有标签里选，避免手打造出重复标签 ——
+      function currentToken() {
+        const m = $("tags").value.match(/([^,，\s]*)$/);
+        return m ? m[1] : "";
+      }
+      function renderTagSuggest() {
+        const box = $("tagsuggest");
+        const token = currentToken().toLowerCase();
+        const used = new Set(
+          $("tags")
+            .value.split(/[,，\s]+/)
+            .map(s => s.trim())
+            .filter(Boolean)
+        );
+        const matches = (state.allTags || [])
+          .filter(t => !used.has(t) && (!token || t.toLowerCase().includes(token)))
+          .slice(0, 8);
+        box.innerHTML = "";
+        state.suggestIdx = -1;
+        if (!matches.length || document.activeElement !== $("tags")) {
+          box.classList.add("hidden");
+          return;
+        }
+        for (const t of matches) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "tagsug";
+          b.textContent = `#${t}`;
+          // mousedown 先于 blur 触发，保证点选能命中
+          b.addEventListener("mousedown", e => {
+            e.preventDefault();
+            pickTag(t);
+          });
+          box.append(b);
+        }
+        box.classList.remove("hidden");
+      }
+      function pickTag(t) {
+        $("tags").value =
+          $("tags").value.replace(/([^,，\s]*)$/, "") + t + ", ";
+        $("tags").focus();
+        renderTagSuggest();
+        clearTimeout(timer);
+        timer = setTimeout(autosave, 500);
+      }
+      function hideTagSuggest() {
+        $("tagsuggest").classList.add("hidden");
+      }
+      async function list() {
+        setPill("⟳ 同步中…", "syncing");
+        try {
+          const d = await api("/api/admin/articles");
+          state.articles = d.articles;
+          state.allTags =
+            Array.isArray(d.tags) && d.tags.length
+              ? d.tags
+              : collectTags(d.articles);
+          saveCachedList();
+          draw();
+          setPill("✓ 全部已同步");
+        } catch (e) {
+          setPill("同步失败，点 ↻ 重试", "err");
+        }
+      }
+      function draw() {
+        const q = $("search").value.toLowerCase();
+        const box = $("posts");
+        box.innerHTML = "";
+        for (const a of state.articles.filter(x =>
+          `${x.title || ""} ${x.slug} ${(x.tags || []).join(" ")}`
+            .toLowerCase()
+            .includes(q)
+        )) {
+          const b = document.createElement("button");
+          b.className = "post";
+          // 照搬 App item_article：标题行[标题+右上badge]，下方 meta
+          const top = document.createElement("div");
+          top.className = "post-top";
+          const h = document.createElement("h3");
+          h.textContent = a.title || a.slug;
+          const st = document.createElement("span");
+          st.className = "st" + (a.draft ? " draft" : "");
+          st.textContent = a.draft ? "草稿" : "已发布";
+          top.append(h, st);
+          const meta = document.createElement("p");
+          meta.className = "meta";
+          const t = fmtTime(a.pubDatetime);
+          // v1.1.1 格式：slug 在前，时间在后
+          meta.textContent = (t ? `${a.slug}  ·  ${t}` : a.slug) + ((a.tags || []).length ? `  ·  ${(a.tags || []).map(x => `#${x}`).join(" ")}` : "");
+          b.append(top, meta);
+          b.onclick = () => open(a.slug);
+          box.append(b);
+        }
+        if (!box.children.length) {
+          const e = document.createElement("p");
+          e.className = "empty";
+          e.textContent = state.hasCache
+            ? "没有匹配的文章"
+            : "点右上角 ↻ 同步获取文章列表";
+          box.append(e);
+        }
+      }
+      async function open(slug) {
+        try {
+          showEdit();
+          status("载入中…");
+          const d = await api(
+            `/api/admin/articles?slug=${encodeURIComponent(slug)}`
+          );
+          state.slug = d.slug;
+          state.sha = d.sha;
+          state.existing = true;
+          $("slug").value = d.slug;
+          parse(d.content);
+          $("edittitle").textContent = $("title").value.trim() || d.slug;
+          const local = localStorage.getItem(draftKey());
+          if (local && confirm("发现这篇文章的本地自动保存版本，是否恢复？")) {
+            const v = JSON.parse(local);
+            for (const id of fields)
+              if (v[id] !== undefined) {
+                if ($(id).type === "checkbox") $(id).checked = v[id];
+                else $(id).value = v[id];
+              }
+            render($("markdown").value);
+          }
+          draw();
+          status("已载入");
+        } catch (e) {
+          status(e.message, true);
+        }
+      }
+      function fresh() {
+        state.slug = null;
+        state.sha = null;
+        state.rawHeader = [];
+        state.existing = false;
+        state.wasDraft = false;
+        for (const id of fields) {
+          if ($(id).type === "checkbox") $(id).checked = true;
+          else $(id).value = "";
+        }
+        $("pinned").checked = false;
+        $("date").value = toLocal(new Date());
+        $("edittitle").textContent = "新文章";
+        render("");
+        updateCount();
+        draw();
+        showEdit();
+        status("新文章（尚未提交）");
+      }
+      $("save").onclick = async () => {
+        const slug = $("slug").value.trim();
+        if (!slug || !$("title").value.trim())
+          return status("标题和 slug 必填", true);
+        try {
+          status("正在提交到 GitHub…");
+          const oldSlug = state.slug;
+          const renamed = oldSlug && oldSlug !== slug;
+          const result = await api("/api/admin/articles", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              slug,
+              sha: renamed ? null : state.sha,
+              content: content(),
+            }),
+          });
+          if (renamed)
+            await api("/api/admin/articles", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ slug: oldSlug, sha: state.sha }),
+            });
+          localStorage.removeItem(draftKey());
+          state.slug = slug;
+          state.sha = result.sha;
+          state.existing = true;
+          // 直接更新本地列表缓存，不再全量拉取
+          state.articles = state.articles.filter(
+            a => a.slug !== slug && a.slug !== oldSlug
+          );
+          state.articles.unshift({
+            slug,
+            sha: result.sha,
+            title: $("title").value.trim() || slug,
+            draft: $("draft").checked,
+            tags: readTags(),
+            pubDatetime: $("date").value
+              ? new Date($("date").value).toISOString()
+              : new Date().toISOString(),
+          });
+          state.articles.sort((a, b) => b.slug.localeCompare(a.slug, "zh-CN"));
+          saveCachedList();
+          draw();
+          showList();
+          status("已提交，Cloudflare 正在自动部署");
+        } catch (e) {
+          status(
+            e.status === 409
+              ? "云端有新版本，请先点 ↻ 同步后再保存"
+              : e.message,
+            true
+          );
+        }
+      };
+      $("delete").onclick = async () => {
+        if (
+          !state.slug ||
+          !state.sha ||
+          !confirm(`确定删除 ${state.slug}？此操作会提交到 GitHub。`)
+        )
+          return;
+        try {
+          await api("/api/admin/articles", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ slug: state.slug, sha: state.sha }),
+          });
+          localStorage.removeItem(draftKey());
+          const deletedSlug = state.slug;
+          state.articles = state.articles.filter(a => a.slug !== deletedSlug);
+          saveCachedList();
+          fresh();
+          showList();
+          status("已删除并提交");
+        } catch (e) {
+          status(e.message, true);
+        }
+      };
+      $("image").onchange = async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          status("上传图片中…");
+          const f = new FormData();
+          f.append("file", file);
+          const d = await api("/api/admin/media", { method: "POST", body: f });
+          const ta = $("markdown"),
+            text = `![${file.name}](${d.url})`;
+          ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, "end");
+          ta.dispatchEvent(new Event("input"));
+          status("图片已上传并插入");
+        } catch (err) {
+          status(err.message, true);
+        }
+        e.target.value = "";
+      };
+      $("new").onclick = fresh;
+      $("back").onclick = showList;
+      $("sync").onclick = list;
+      $("search").oninput = draw;
+      // 标签输入框：输入/聚焦时弹出补全，上下键+回车可选，Esc 关闭
+      $("tags").addEventListener("input", renderTagSuggest);
+      $("tags").addEventListener("focus", renderTagSuggest);
+      $("tags").addEventListener("blur", () => setTimeout(hideTagSuggest, 150));
+      $("tags").addEventListener("keydown", e => {
+        const box = $("tagsuggest");
+        const items = [...box.querySelectorAll(".tagsug")];
+        if (e.key === "Escape") {
+          hideTagSuggest();
+          return;
+        }
+        if (box.classList.contains("hidden") || !items.length) return;
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          state.suggestIdx =
+            (state.suggestIdx + (e.key === "ArrowDown" ? 1 : -1) + items.length) %
+            items.length;
+          items.forEach((el, i) =>
+            el.classList.toggle("sel", i === state.suggestIdx)
+          );
+          items[state.suggestIdx].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "Enter" && state.suggestIdx >= 0) {
+          e.preventDefault();
+          pickTag(items[state.suggestIdx].textContent.slice(1));
+        } else if (e.key === "Enter") {
+          hideTagSuggest();
+        }
+      });
+      $("mode").onclick = () => {
+        $("workspace").classList.toggle("previewing");
+        $("mode").textContent = $("workspace").classList.contains("previewing")
+          ? "编辑"
+          : "预览";
+      };
+      // 进写作台不再自动拉取：有缓存直接显示，没有则提示手动同步
+      if (!loadCachedList()) {
+        setPill("点 ↻ 同步获取文章");
+        draw();
+      }
+    </script>
+  </body>
+</html>

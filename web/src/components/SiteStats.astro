@@ -1,0 +1,21 @@
+---
+import { getCollection } from "astro:content";
+import { countWords } from "@/utils/countWords";
+import { SITE } from "@/config";
+
+// 构建时实时统计：每次构建（新增/更新文章后）都会重新计算
+const posts = await getCollection("blog", ({ data }) => !data.draft);
+const totalWords = posts.reduce((sum, post) => sum + countWords(post.body), 0);
+const postCount = posts.length;
+
+const formattedWords = totalWords.toLocaleString("zh-CN");
+---
+
+<section
+  id="site-stats"
+  class="my-10 flex flex-col items-center gap-2 text-center text-sm text-foreground/70"
+>
+  <p>
+    共写作 <span class="font-semibold text-accent tabular-nums">{formattedWords}</span> 字 · {postCount} 篇文章
+  </p>
+</section>

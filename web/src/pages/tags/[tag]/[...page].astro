@@ -1,0 +1,51 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Main from "@/layouts/Main.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Card from "@/components/Card.astro";
+import Pagination from "@/components/Pagination.astro";
+import getUniqueTags from "@/utils/getUniqueTags";
+import getSortedPosts from "@/utils/getSortedPosts";
+import { slugifyStr } from "@/utils/slugify";
+import { SITE } from "@/config";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  const tags = getUniqueTags(posts);
+
+  return tags.flatMap(({ tag, tagName }) => {
+    const tagPosts = getSortedPosts(
+      posts.filter(post =>
+        (post.data.tags ?? []).map(t => slugifyStr(t)).includes(tag)
+      )
+    );
+    return paginate(tagPosts, {
+      params: { tag },
+      props: { tagName },
+      pageSize: SITE.postPerPage,
+    });
+  });
+}) satisfies GetStaticPaths;
+
+const { page, tagName } = Astro.props;
+---
+
+<Layout title={`Tag: ${tagName} | ${SITE.title}`}>
+  <Header />
+  <Main
+    pageTitle={[`标签 #`, tagName]}
+    titleTransition={tagName}
+    pageDesc={`带有「${tagName}」标签的所有文章。`}
+  >
+    <ul>
+      {page.data.map(data => <Card {...data} />)}
+    </ul>
+  </Main>
+
+  <Pagination {page} />
+
+  <Footer noMarginTop={page.lastPage > 1} />
+</Layout>

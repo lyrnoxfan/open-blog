@@ -1,0 +1,143 @@
+---
+// 紫藤花瓣横幅：轻量 canvas 动画，零图片素材
+// 仅在可视区运行，支持 prefers-reduced-motion
+---
+
+<div class="wisteria-banner relative w-full overflow-hidden" aria-hidden="true">
+  <canvas id="wisteria-canvas" class="block h-[120px] w-full sm:h-[140px]"
+  ></canvas>
+  <div
+    class="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background to-transparent"
+  >
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    const canvas = document.getElementById("wisteria-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let W = 0,
+      H = 0,
+      petals = [],
+      raf = null,
+      running = false;
+
+    const COLORS = [
+      "rgba(216, 180, 220, 0.75)", // 淡紫
+      "rgba(230, 190, 230, 0.6)", // 粉紫
+      "rgba(200, 170, 215, 0.5)", // 灰紫
+      "rgba(240, 200, 235, 0.65)", // 浅粉
+    ];
+
+    function resize() {
+      const r = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = r.width;
+      H = r.height;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function makePetal(init) {
+      return {
+        x: Math.random() * W,
+        y: init ? Math.random() * H : -12,
+        s: 3 + Math.random() * 5, // 大小
+        vy: 0.3 + Math.random() * 0.7, // 下落速度
+        vx: (Math.random() - 0.5) * 0.4, // 横向漂移
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.03, // 旋转速度
+        sway: Math.random() * Math.PI * 2, // 摇摆相位
+        swayAmp: 0.5 + Math.random() * 1.2,
+        color: COLORS[(Math.random() * COLORS.length) | 0],
+        alpha: 0.5 + Math.random() * 0.4,
+      };
+    }
+
+    function init() {
+      resize();
+      const n = Math.min(36, Math.floor(W / 24));
+      petals = Array.from({ length: n }, () => makePetal(true));
+      if (REDUCED) {
+        draw(0); // 静止：只画一帧
+        return;
+      }
+    }
+
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      for (const p of petals) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        // 花瓣形状：椭圆
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.s, p.s * 0.55, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function step(t) {
+      if (!running) return;
+      for (const p of petals) {
+        p.sway += 0.012;
+        p.x += p.vx + Math.sin(p.sway) * p.swayAmp * 0.3;
+        p.y += p.vy;
+        p.rot += p.vr;
+        if (p.y > H + 12 || p.x < -12 || p.x > W + 12) {
+          Object.assign(p, makePetal(false));
+        }
+      }
+      draw(t);
+      raf = requestAnimationFrame(step);
+    }
+
+    function start() {
+      if (running || REDUCED) return;
+      running = true;
+      raf = requestAnimationFrame(step);
+    }
+
+    function stop() {
+      running = false;
+      if (raf) cancelAnimationFrame(raf);
+    }
+
+    // 仅可视时运行，省电
+    const io = new IntersectionObserver(
+      entries => {
+        entries[0].isIntersecting ? start() : stop();
+      },
+      { threshold: 0.1 }
+    );
+    io.observe(canvas);
+
+    let rt;
+    addEventListener("resize", () => {
+      clearTimeout(rt);
+      rt = setTimeout(() => {
+        resize();
+        if (REDUCED) draw(0);
+      }, 200);
+    });
+
+    init();
+  })();
+</script>
+
+<style>
+  .wisteria-banner {
+    /* 深色模式下稍微压暗花瓣 */
+    --petal-dim: 1;
+  }
+  html[data-theme="dark"] .wisteria-banner canvas {
+    opacity: 0.7;
+  }
+</style>
