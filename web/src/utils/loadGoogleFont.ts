@@ -34,18 +34,19 @@ async function loadGoogleFonts(
 ): Promise<
   Array<{ name: string; data: ArrayBuffer; weight: number; style: string }>
 > {
+  // 衬线中文字体：Google Fonts 的 text= 参数只下发用到的字形，体积很小
   const fontsConfig = [
     {
-      name: "IBM Plex Mono",
-      font: "IBM+Plex+Mono",
+      name: "Noto Serif SC",
+      font: "Noto+Serif+SC",
       weight: 400,
       style: "normal",
     },
     {
-      name: "IBM Plex Mono",
-      font: "IBM+Plex+Mono",
+      name: "Noto Serif SC",
+      font: "Noto+Serif+SC",
       weight: 700,
-      style: "bold",
+      style: "normal",
     },
   ];
 

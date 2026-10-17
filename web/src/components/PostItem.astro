@@ -1,0 +1,50 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getPath } from "@/utils/getPath";
+import { toZoned, transitionName } from "@/utils/date";
+
+type Props = {
+  post: CollectionEntry<"blog">;
+  /** 标题层级：列表页用 h2，首页「近作」区用 h3 */
+  as?: "h2" | "h3";
+  showTags?: boolean;
+};
+
+const { post, as: Heading = "h2", showTags = true } = Astro.props;
+const { title, description, tags, pubDatetime, timezone, pinned } = post.data;
+const date = toZoned(pubDatetime, timezone);
+---
+
+<li class="post-item">
+  <a href={getPath(post.id, post.filePath)} class="group">
+    <time class="post-date" datetime={date.toISOString()}>
+      <span class="d">{date.format("DD")}</span>
+      <span class="m">{date.format("M")} 月</span>
+    </time>
+    <div class="min-w-0">
+      <Heading
+        class="post-title"
+        style={{ viewTransitionName: transitionName(post.id) }}
+      >
+        {
+          pinned && (
+            <span class="me-1.5 align-[0.1em] text-xs font-normal text-seal">
+              置顶
+            </span>
+          )
+        }
+        {title}
+      </Heading>
+      {description && <p class="post-desc">{description}</p>}
+      {
+        showTags && tags && tags.length > 0 && (
+          <p class="post-tags">
+            {tags.map(tag => (
+              <span>#{tag}</span>
+            ))}
+          </p>
+        )
+      }
+    </div>
+  </a>
+</li>

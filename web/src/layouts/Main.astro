@@ -1,42 +1,32 @@
 ---
-import Breadcrumb from "@/components/Breadcrumb.astro";
-import { SITE } from "@/config";
+/**
+ * 列表类页面（文章 / 标签 / 搜索）的统一页头与主体。
+ */
+type Props = {
+  pageTitle: string;
+  pageDesc?: string;
+  eyebrow?: string;
+};
 
-type StringTitle = { pageTitle: string };
-type ArrayTitle = { pageTitle: [string, string]; titleTransition: string };
-
-type Props = (StringTitle | ArrayTitle) & { pageDesc?: string };
-
-const { props } = Astro;
-
-const backUrl = SITE.showBackButton ? Astro.url.pathname : "/";
+const { pageTitle, pageDesc, eyebrow } = Astro.props;
+const backUrl = Astro.url.pathname;
 ---
 
-<Breadcrumb />
-<main data-backUrl={backUrl} id="main-content" class="app-layout pb-4">
-  {
-    "titleTransition" in props ? (
-      <h1 class="text-2xl font-semibold sm:text-3xl">
-        {props.pageTitle[0]}
-        <span transition:name={props.titleTransition}>
-          {props.pageTitle[1]}
-        </span>
-      </h1>
-    ) : (
-      <h1 class="text-2xl font-semibold sm:text-3xl">{props.pageTitle}</h1>
-    )
-  }
-  <p class="mt-2 mb-6 italic">{props.pageDesc}</p>
-  <slot />
+<main id="main-content" data-backurl={backUrl} class="app-layout pb-12">
+  <header class="page-head rise">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h1>{pageTitle}</h1>
+    {pageDesc && <p class="lead">{pageDesc}</p>}
+  </header>
+  <div class="rise" style="--i: 1">
+    <slot />
+  </div>
 </main>
 
 <script>
-  document.addEventListener("astro:page-load", () => {
-    const mainContent: HTMLElement | null =
-      document.querySelector("#main-content");
-    const backUrl = mainContent?.dataset?.backurl;
-    if (backUrl) {
-      sessionStorage.setItem("backUrl", backUrl);
-    }
-  });
+  // 记住列表页地址，文章页的「返回」会回到这里
+  const main = document.querySelector<HTMLElement>("#main-content");
+  if (main?.dataset.backurl) {
+    sessionStorage.setItem("backUrl", main.dataset.backurl);
+  }
 </script>

@@ -1,37 +1,26 @@
 ---
 import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
-import LinkButton from "./LinkButton.astro";
 import { SITE } from "@/config";
 ---
 
 {
   SITE.showBackButton && (
-    <div class="app-layout flex items-center justify-start">
-      <LinkButton
+    <div class="relative z-10 app-layout">
+      <a
         id="back-button"
         href="/"
-        class="focus-outline -ms-2 mt-8 mb-2 hover:text-foreground/75"
+        class="-ms-2 inline-flex min-h-11 items-center gap-1 rounded-full px-2 text-sm text-ink-soft transition-colors hover:text-wisteria"
       >
-        <IconChevronLeft class="inline-block size-6 rtl:rotate-180" />
+        <IconChevronLeft class="size-5 rtl:rotate-180" aria-hidden="true" />
         <span>返回</span>
-      </LinkButton>
+      </a>
     </div>
   )
 }
 
 <script>
-  /* Update Search Praam */
-  function updateGoBackUrl() {
-    const backButton: HTMLAnchorElement | null =
-      document.querySelector("#back-button");
-
-    const backUrl = sessionStorage.getItem("backUrl");
-
-    if (backUrl && backButton) {
-      backButton.href = backUrl;
-    }
-  }
-
-  document.addEventListener("astro:page-load", updateGoBackUrl);
-  updateGoBackUrl();
+  // 回到进入文章前的列表页（首页 / 列表 / 标签 / 搜索结果）
+  const backButton = document.querySelector<HTMLAnchorElement>("#back-button");
+  const backUrl = sessionStorage.getItem("backUrl");
+  if (backUrl && backButton) backButton.href = backUrl;
 </script>

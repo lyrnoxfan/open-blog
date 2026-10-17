@@ -3,18 +3,20 @@ import "@pagefind/default-ui/css/ui.css";
 import Main from "@/layouts/Main.astro";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
 import { SITE } from "@/config";
 
 const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
 ---
 
-<Layout title={`Search | ${SITE.title}`}>
+<Layout title={`搜索 | ${SITE.title}`}>
   <Header />
-  <Main pageTitle="搜索" pageDesc="搜索文章...">
-    <div id="pagefind-search" transition:persist data-backurl={backUrl}></div>
+  <Main
+    eyebrow="Search"
+    pageTitle="搜索"
+    pageDesc="在所有文章里找一句话、一个词。"
+  >
+    <div id="pagefind-search" data-backurl={backUrl}></div>
   </Main>
-  <Footer />
 </Layout>
 
 <script>
@@ -35,9 +37,9 @@ const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
       // Display warning inn dev mode
       if (import.meta.env.DEV) {
         pageFindSearch.innerHTML = `
-            <div class="bg-muted/75 rounded p-4 space-y-4 mb-4">
-              <p><strong>开发模式警告！</strong>您需要至少构建一次项目，才能在开发过程中看到搜索结果。</p>
-              <code class="block bg-black text-white px-2 py-1 rounded">pnpm run build</code>
+            <div class="mb-4 space-y-3 rounded-2xl border border-rule bg-surface p-4 text-sm">
+              <p><strong>开发模式提示：</strong>需要先构建一次项目，才能在开发时看到搜索结果。</p>
+              <code class="block rounded bg-paper-deep px-2 py-1">pnpm run build</code>
             </div>
           `;
       }
@@ -47,6 +49,16 @@ const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
         element: "#pagefind-search",
         showImages: false,
         showSubResults: true,
+        translations: {
+          placeholder: "输入关键词…",
+          clear_search: "清除",
+          load_more: "加载更多",
+          search_label: "搜索本站",
+          zero_results: "没有找到与「[SEARCH_TERM]」相关的文章",
+          many_results: "找到 [COUNT] 篇与「[SEARCH_TERM]」相关的文章",
+          one_result: "找到 1 篇与「[SEARCH_TERM]」相关的文章",
+          searching: "正在搜索「[SEARCH_TERM]」…",
+        },
         processTerm: function (term: string) {
           params.set("q", term); // Update the `q` parameter in the URL
           history.replaceState(history.state, "", "?" + params.toString()); // Push the new URL without reloading
@@ -88,66 +100,3 @@ const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
   });
   initSearch();
 </script>
-
-<style is:global>
-  #pagefind-search {
-    --pagefind-ui-font: var(--font-app);
-    --pagefind-ui-text: var(--foreground);
-    --pagefind-ui-background: var(--surface);
-    --pagefind-ui-border: var(--border);
-    --pagefind-ui-primary: var(--accent);
-    --pagefind-ui-tag: var(--background);
-    --pagefind-ui-border-radius: 1rem;
-    --pagefind-ui-border-width: 1px;
-    --pagefind-ui-image-border-radius: 12px;
-    --pagefind-ui-image-box-ratio: 3 / 2;
-
-    form::before {
-      background-color: var(--foreground);
-    }
-
-    input {
-      font-weight: 400;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding-inline: 1.25rem;
-      box-shadow: 0 2px 12px rgba(91, 141, 239, 0.08);
-    }
-
-    input:focus-visible {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.12);
-    }
-
-    .pagefind-ui__result {
-      border-radius: 1rem;
-      border: 1px solid var(--border);
-      padding: 1rem 1.25rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .pagefind-ui__result-title a {
-      color: var(--accent);
-      outline-offset: 1px;
-      outline-color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .pagefind-ui__result-title a:focus-visible,
-    .pagefind-ui__search-clear:focus-visible {
-      text-decoration-line: none;
-      outline-width: 2px;
-      outline-style: dashed;
-    }
-
-    .pagefind-ui__result:last-of-type {
-      border-bottom: 1px solid var(--border);
-    }
-
-    .pagefind-ui__result-nested .pagefind-ui__result-link:before {
-      font-family: system-ui;
-    }
-  }
-</style>

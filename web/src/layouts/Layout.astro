@@ -52,11 +52,14 @@ const structuredData = {
 <html
   dir={SITE.dir}
   lang=`${SITE.lang ?? "en"}`
-  class={`${scrollSmooth && "scroll-smooth"}`}
+  class:list={{ "scroll-smooth": scrollSmooth }}
 >
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalURL} />
     <meta name="generator" content={Astro.generator} />
@@ -64,6 +67,14 @@ const structuredData = {
     <Font
       cssVariable="--font-google-sans-code"
       preload={[{ subset: "latin", weight: 400, style: "normal" }]}
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- 标题衬线（Noto Serif SC 按需分片加载）+ Letter 的手写与签名字体 -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Noto+Serif+SC:wght@500;600;700&family=Oooh+Baby&display=swap"
+      rel="stylesheet"
     />
 
     <title>{title}</title>
@@ -114,7 +125,7 @@ const structuredData = {
       href={new URL("rss.xml", Astro.site)}
     />
 
-    <meta name="theme-color" content="" />
+    <meta name="theme-color" content="#f3ebdf" />
 
     {
       PUBLIC_GOOGLE_SITE_VERIFICATION && (
@@ -154,7 +165,7 @@ const structuredData = {
 
   <body>
     <slot />
-    <div aria-hidden="true" class="h-24 shrink-0"></div>
+    <div aria-hidden="true" class="dock-spacer"></div>
     <Dock />
 
     <script>

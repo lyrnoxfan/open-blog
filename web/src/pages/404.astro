@@ -1,29 +1,24 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
-import LinkButton from "@/components/LinkButton.astro";
 import { SITE } from "@/config";
 ---
 
-<Layout title={`404 Not Found | ${SITE.title}`}>
+<Layout title={`404 | ${SITE.title}`}>
   <Header />
-
   <main
     id="main-content"
-    class="flex app-layout flex-1 items-center justify-center"
+    class="app-layout flex flex-1 items-center justify-center"
   >
-    <div
-      class="mb-14 flex flex-col items-center justify-center px-4 text-center"
-    >
-      <h1 class="text-8xl font-bold text-accent">404</h1>
-      <p class="mt-4 text-xl font-medium sm:text-2xl">页面未找到</p>
-      <p class="mt-2 text-sm opacity-60">你访问的页面不存在或已被移动</p>
-      <LinkButton href="/" class="my-6 btn-pill btn-pill-hover">
-        返回首页
-      </LinkButton>
+    <div class="jian rise w-full max-w-sm px-6 py-10 text-center">
+      <p class="font-hand text-2xl text-seal">return to sender —</p>
+      <h1 class="mt-2 text-6xl font-semibold tracking-wider text-ink">404</h1>
+      <p class="mt-4 font-serif text-lg">这封信好像寄丢了</p>
+      <p class="mt-1 text-sm text-ink-soft">你要找的页面不存在，或已经搬走。</p>
+      <div class="mt-7 flex justify-center gap-3">
+        <a href="/" class="btn btn-primary">回到首页</a>
+        <a href="/search/" class="btn">搜索看看</a>
+      </div>
     </div>
   </main>
-
-  <Footer />
 </Layout>

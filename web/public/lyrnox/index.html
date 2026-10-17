@@ -8,30 +8,37 @@
     />
     <meta name="robots" content="noindex,nofollow,noarchive" />
     <title>写作台</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet" />
     <style>
+      /* 藤笺令牌副本：与 src/styles/tokens.css 保持一致（变量名沿用写作台旧名，脚本无依赖） */
       :root {
         color-scheme: light;
-        --text: #1f2a44;
-        --muted: #9aa5c4;
-        --muted2: #6d7ba0;
-        --blue: #5b8def;
-        --pink: #f472b6;
-        --green: #16a34a;
-        --amber: #f59e0b;
-        --danger: #e11d48;
-        --card: #e8ffffff;
-        --glass: #e6ffffff;
-        --line: #b3ffffff;
-        --shadow: 0 12px 32px rgba(148, 163, 214, 0.2);
-        --shadow-sm: 0 4px 16px rgba(91, 141, 239, 0.1);
+        --paper: #f3ebdf;
+        --text: #26221d;
+        --muted: #8a7f72;
+        --muted2: #5f574d;
+        --blue: #67498f; /* 藤：主操作 */
+        --pink: #a13f04; /* 印：保存 / 新建 */
+        --green: #5f7048;
+        --amber: #9a6a14;
+        --danger: #b3261e;
+        --card: #fffaf3;
+        --glass: #f3ebdf;
+        --line: #e2d6c4;
+        --highlight: #e7ddf0;
+        --tape: rgba(196, 176, 222, 0.55);
+        --shadow: 0 2px 3px rgba(111, 101, 85, 0.08),
+          0 14px 30px -18px rgba(35, 34, 31, 0.3);
+        --shadow-sm: 0 1px 2px rgba(111, 101, 85, 0.08),
+          0 2px 8px rgba(111, 101, 85, 0.08);
+        --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong",
+          Georgia, serif;
         font-family:
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          "PingFang SC",
-          "Hiragino Sans GB",
-          "Microsoft YaHei",
-          sans-serif;
+          system-ui, -apple-system, "PingFang SC", "HarmonyOS Sans SC",
+          "Noto Sans SC", "Microsoft YaHei", sans-serif;
+        -webkit-font-smoothing: antialiased;
       }
       * {
         box-sizing: border-box;
@@ -39,14 +46,7 @@
       body {
         margin: 0;
         min-height: 100vh;
-        /* 照搬 App v1.1.1 bg_gradient：Android 135° = CSS to top left */
-        background: linear-gradient(
-            to top left,
-            #e3edff 0%,
-            #f4eaf9 52%,
-            #fde7f1 100%
-          )
-          fixed;
+        background: var(--paper);
         color: var(--text);
       }
       button,
@@ -71,7 +71,7 @@
         margin-left: 14px;
         margin-right: 14px;
       }
-      /* —— 顶部悬浮胶囊（照搬 App：14dp 边距/12dp 顶距，内边距 6dp/4dp） —— */
+      /* —— 顶部纸面胶囊 —— */
       .topbar {
         position: sticky;
         top: 12px;
@@ -80,12 +80,12 @@
         align-items: center;
         justify-content: space-between;
         margin: 12px 14px 0;
-        background: var(--glass);
-        -webkit-backdrop-filter: blur(18px) saturate(1.3);
-        backdrop-filter: blur(18px) saturate(1.3);
+        background: var(--card);
         border: 1px solid var(--line);
         border-radius: 28px;
-        box-shadow: 0 8px 32px rgba(91, 141, 239, 0.14);
+        box-shadow:
+          0 2px 2px rgba(111, 101, 85, 0.1),
+          0 8px 24px rgba(111, 101, 85, 0.14);
         padding: 4px 6px;
       }
       .ttitle {
@@ -93,8 +93,11 @@
         left: 50%;
         transform: translateX(-50%);
         margin: 0;
-        font-size: 17px;
-        font-weight: 800;
+        font-family: var(--serif);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--blue);
         white-space: nowrap;
       }
       .tbtn {
@@ -111,7 +114,6 @@
         color: var(--pink);
         font-weight: 700;
       }
-      /* 保存：照搬 App，粉色文字按钮，非渐变 */
       .savebtn {
         background: none;
         border: 0;
@@ -127,7 +129,7 @@
         margin-top: 12px;
       }
       .statuspill {
-        background: var(--glass);
+        background: var(--card);
         border: 1px solid var(--line);
         border-radius: 28px;
         padding: 6px 14px;
@@ -152,16 +154,16 @@
         border-radius: 999px;
         padding: 14px 22px;
         font-size: 16px;
-        background: rgba(255, 255, 255, 0.88);
+        background: var(--card);
         color: inherit;
         box-shadow: var(--shadow-sm);
       }
       .search:focus {
         outline: none;
         border-color: var(--pink);
-        box-shadow: 0 0 0 3px rgb(244 114 182 / 0.18);
+        box-shadow: 0 0 0 4px var(--highlight);
       }
-      /* —— 文章卡片（照搬 App item_article：标题行[标题+右上badge]+下方meta） —— */
+      /* —— 文章卡片 —— */
       .posts {
         display: grid;
         gap: 10px;
@@ -173,10 +175,24 @@
         text-align: left;
         background: var(--card);
         border: 1px solid var(--line);
-        border-radius: 20px;
+        border-radius: 16px;
         box-shadow: var(--shadow);
         padding: 16px;
         color: inherit;
+      }
+      .formcard {
+        position: relative;
+      }
+      .formcard::before {
+        content: "";
+        position: absolute;
+        top: -9px;
+        left: 50%;
+        width: 84px;
+        height: 18px;
+        border-radius: 2px;
+        background: var(--tape);
+        transform: translateX(-50%) rotate(-2.5deg);
       }
       .post:active {
         transform: scale(0.99);
@@ -190,8 +206,9 @@
         flex: 1;
         min-width: 0;
         margin: 0;
-        font-size: 16px;
-        font-weight: 700;
+        font-family: var(--serif);
+        font-size: 17px;
+        font-weight: 600;
         line-height: 1.35;
         white-space: nowrap;
         overflow: hidden;
@@ -207,6 +224,7 @@
       .post .meta {
         margin: 5px 0 0;
         font-size: 12px;
+        font-style: italic;
         color: var(--muted);
       }
       .post .st.draft {
@@ -217,7 +235,7 @@
         color: var(--muted);
         padding: 32px 0;
       }
-      /* —— 新建悬浮按钮（照搬 App fab_bg：62dp 蓝→粉） —— */
+      /* —— 新建悬浮按钮 —— */
       .fab {
         position: fixed;
         right: 22px;
@@ -229,8 +247,8 @@
         font-size: 30px;
         line-height: 1;
         color: #fff;
-        background: linear-gradient(to top left, #5b8def, #f472b6);
-        box-shadow: 0 14px 34px rgba(91, 141, 239, 0.45);
+        background: var(--pink);
+        box-shadow: 0 14px 30px -10px rgba(161, 63, 4, 0.55);
       }
       .fab:active {
         transform: scale(0.96);
@@ -243,6 +261,7 @@
       }
       .statusline {
         font-size: 13px;
+        font-style: italic;
         color: var(--muted2);
         padding: 0 6px;
         min-height: 18px;
@@ -252,7 +271,7 @@
         justify-content: center;
       }
       .wcountpill {
-        background: var(--glass);
+        background: var(--card);
         border: 1px solid var(--line);
         border-radius: 28px;
         padding: 6px 14px;
@@ -265,25 +284,24 @@
         gap: 8px;
         flex-wrap: wrap;
       }
-      /* 操作小按钮：照搬 App md_btn（白底 14dp 圆角） */
       .chip {
         display: inline-block;
-        border: 1px solid #e3e9f8;
-        background: #fff;
+        border: 1px solid var(--line);
+        background: var(--card);
         border-radius: 14px;
         padding: 10px 14px;
         font-size: 14px;
         color: var(--text);
-        box-shadow: 0 2px 8px rgba(91, 141, 239, 0.08);
+        box-shadow: 0 2px 8px rgba(111, 101, 85, 0.08);
       }
       .chip.danger {
         color: var(--danger);
       }
-      /* 表单：照搬 App，单卡片，label 13sp #6D7BA0，输入框 md_btn */
+      /* 表单：单张白卡 */
       .formcard {
         background: var(--card);
         border: 1px solid var(--line);
-        border-radius: 20px;
+        border-radius: 16px;
         box-shadow: var(--shadow);
         padding: 16px;
         display: grid;
@@ -297,11 +315,11 @@
       }
       .field input {
         width: 100%;
-        border: 1px solid #e3e9f8;
+        border: 1px solid var(--line);
         border-radius: 14px;
         padding: 10px;
         font-size: 14px;
-        background: #fff;
+        background: var(--glass);
         color: inherit;
       }
       .field input#title {
@@ -311,7 +329,7 @@
       .field input:focus {
         outline: none;
         border-color: var(--pink);
-        box-shadow: 0 0 0 3px rgb(244 114 182 / 0.18);
+        box-shadow: 0 0 0 4px var(--highlight);
       }
       /* —— 标签自动补全下拉 —— */
       .tagfield {
@@ -323,10 +341,10 @@
         right: 0;
         top: 100%;
         margin-top: 4px;
-        background: #fff;
-        border: 1px solid #e3e9f8;
+        background: var(--card);
+        border: 1px solid var(--line);
         border-radius: 14px;
-        box-shadow: 0 12px 32px rgba(91, 141, 239, 0.18);
+        box-shadow: 0 12px 32px rgba(111, 101, 85, 0.2);
         max-height: 220px;
         overflow: auto;
         z-index: 20;
@@ -345,7 +363,7 @@
       }
       .tagsug:hover,
       .tagsug.sel {
-        background: #eef3ff;
+        background: var(--highlight);
         color: var(--blue);
       }
       .toggles {
@@ -368,7 +386,7 @@
         width: 100%;
         min-height: 340px;
         border: 1px solid var(--line);
-        border-radius: 20px;
+        border-radius: 16px;
         background: var(--card);
         box-shadow: var(--shadow);
         padding: 16px;
@@ -383,15 +401,37 @@
       .markdown:focus {
         outline: none;
         border-color: var(--pink);
-        box-shadow: 0 0 0 3px rgb(244 114 182 / 0.18);
+        box-shadow: 0 0 0 4px var(--highlight);
       }
       .preview img {
         max-width: 100%;
+        border: 6px solid #fff;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(111, 101, 85, 0.12);
+      }
+      .preview h1,
+      .preview h2,
+      .preview h3 {
+        font-family: var(--serif);
+        font-weight: 400;
+      }
+      .preview a {
+        color: var(--blue);
+        text-decoration-style: dashed;
+        text-underline-offset: 4px;
+      }
+      .preview blockquote {
+        border-left: 3px solid var(--blue);
+        margin: 1em 0;
+        padding: 0.2em 0 0.2em 1em;
+        color: var(--muted2);
+        font-style: italic;
       }
       .preview pre {
         overflow: auto;
         padding: 12px;
-        background: #f2f4fb;
+        background: var(--glass);
+        border: 1px solid var(--line);
         border-radius: 12px;
       }
       @media (max-width: 720px) {
@@ -408,53 +448,37 @@
         }
       }
       @media (prefers-color-scheme: dark) {
+        /* 深色：灯下的旧信纸 */
         :root {
           color-scheme: dark;
-          --text: #e9edf9;
-          --muted: #8b93b8;
-          --muted2: #a7aecb;
-          --blue: #7ea6ff;
-          --pink: #f9a8d4;
-          --card: rgba(30, 36, 68, 0.88);
-          --glass: rgba(28, 34, 62, 0.72);
-          --line: rgba(255, 255, 255, 0.1);
-          --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-          --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+          --paper: #221a13;
+          --text: #f1e7d6;
+          --muted: #8f7f6b;
+          --muted2: #c4b49d;
+          --blue: #c6b0ea;
+          --pink: #e08d4e;
+          --green: #a9b18c;
+          --amber: #d9a441;
+          --danger: #f2a093;
+          --card: #2c2219;
+          --glass: #221a13;
+          --line: #3e3227;
+          --highlight: #3b3043;
+          --tape: rgba(170, 150, 200, 0.3);
+          --shadow: 0 2px 4px rgba(0, 0, 0, 0.25),
+            0 14px 30px -16px rgba(0, 0, 0, 0.6);
+          --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
-        body {
-          background: linear-gradient(
-              180deg,
-              #251b40 0%,
-              #1a1745 55%,
-              #101c42 100%
-            )
-            fixed;
+        .preview img {
+          border-color: var(--line);
         }
-        .search,
-        .statuspill,
-        .field input,
-        .markdown,
-        .preview,
-        .formcard,
-        .chip,
-        .tagsuggest {
-          background: rgba(28, 34, 62, 0.75);
+        .fab {
+          color: #221a13;
         }
-        .field input {
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-        .tagsuggest {
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-        .tagsug:hover,
-        .tagsug.sel {
-          background: rgba(91, 141, 239, 0.18);
-        }
-        .chip {
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-        .preview pre {
-          background: rgba(0, 0, 0, 0.3);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
         }
       }
     </style>
@@ -464,7 +488,7 @@
     <div id="view-list" class="view">
       <header class="topbar">
         <a class="tbtn back" href="/">‹ 返回</a>
-        <h1 class="ttitle">✍️ 写文章</h1>
+        <h1 class="ttitle">写文章</h1>
         <button class="tbtn syncbtn" id="sync">↻ 同步</button>
       </header>
       <div class="pillwrap">
@@ -482,7 +506,7 @@
       <header class="topbar">
         <button class="tbtn back" id="back">‹ 返回</button>
         <h1 class="ttitle" id="edittitle">新文章</h1>
-        <button class="savebtn" id="save">💾 保存</button>
+        <button class="savebtn" id="save">保存</button>
       </header>
       <div class="editwrap">
         <div class="statusline"><span id="status">正在载入…</span></div>

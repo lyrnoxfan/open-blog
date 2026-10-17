@@ -2,20 +2,19 @@
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
-import LinkButton from "@/components/LinkButton.astro";
+import Wisteria from "@/components/Wisteria.astro";
+import PostItem from "@/components/PostItem.astro";
 import SiteStats from "@/components/SiteStats.astro";
-import WisteriaBanner from "@/components/WisteriaBanner.astro";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import getSortedPosts from "@/utils/getSortedPosts";
 import { getPath } from "@/utils/getPath";
+import { formatDateZh, toZoned, transitionName } from "@/utils/date";
 import { SITE } from "@/config";
-import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
-import dayjs from "dayjs";
 
 const posts = await getCollection("blog");
 const sortedPosts = getSortedPosts(posts);
 
-// 置顶逻辑：有置顶文章时，置顶区显示置顶的文章；无置顶时显示最新一篇
+// 置顶逻辑：有置顶文章时，信笺区显示置顶文章；无置顶时显示最新一篇
 const pinnedPosts = sortedPosts.filter(post => post.data.pinned);
 const hasPinned = pinnedPosts.length > 0;
 const featuredPosts = hasPinned ? pinnedPosts : sortedPosts.slice(0, 1);
@@ -23,81 +22,125 @@ const listPosts = hasPinned
   ? sortedPosts.filter(p => !p.data.pinned).slice(0, SITE.postPerIndex)
   : sortedPosts.slice(1, SITE.postPerIndex + 1);
 
-// 日期格式化：10月11日
-const fmtDay = (d: string | Date) => {
-  const dt = dayjs(d);
-  return `${dt.month() + 1}月${dt.date()}日`;
-};
+// 信纸抬头日期：构建时先写一份，浏览器里再换成当天（访问者本地时区）
+const dateline = toZoned(new Date()).format("dddd, MMMM D, YYYY");
 ---
 
 <Layout>
+  <Wisteria />
   <Header />
-  <WisteriaBanner />
-  <main id="main-content" data-layout="index" class="app-layout">
-    {
-      featuredPosts.length > 0 && (
-        <div class="mb-10 space-y-8 pt-8 pb-2">
-          {featuredPosts.map(post => (
-            <article>
-              <a href={getPath(post.id, post.filePath)} class="group block">
-                <span class="mb-3 inline-block rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
-                  {post.data.pinned ? "置顶" : "最新"}
-                </span>
-                <h1 class="mb-2 text-2xl leading-snug font-bold transition-colors group-hover:text-accent sm:text-3xl">
-                  {post.data.title}
-                </h1>
-                {post.data.description && (
-                  <p class="line-clamp-2 text-sm leading-relaxed opacity-60">
-                    {post.data.description}
-                  </p>
-                )}
-              </a>
-            </article>
-          ))}
-        </div>
-      )
-    }
+
+  <main id="main-content" data-layout="index" class="relative z-10 app-layout">
+    <section class="rise pt-2 pb-10 sm:pt-6">
+      <p class="dateline" id="dateline">{dateline}</p>
+      <h1
+        class="mt-4 text-[1.75rem] leading-[1.55] font-semibold tracking-[0.02em] sm:text-[2.125rem]"
+      >
+        个人<span class="hl">技术记录</span>，<br
+          class="sm:hidden"
+        />与一些必要的备忘。
+      </h1>
+      <SiteStats class="mt-4" />
+    </section>
 
     {
-      listPosts.length > 0 && (
-        <section class="space-y-8 pb-6">
-          {listPosts.map(post => (
-            <article>
-              <a href={getPath(post.id, post.filePath)} class="group block">
-                <h2 class="mb-1 text-lg leading-snug font-medium text-accent">
-                  {post.data.title}
-                </h2>
-                <time class="block text-sm opacity-60">
-                  {fmtDay(post.data.pubDatetime)}
+      featuredPosts.length > 0 && (
+        <section
+          aria-label={hasPinned ? "置顶文章" : "最新文章"}
+          class="space-y-8 pb-4"
+        >
+          {featuredPosts.map((post, i) => (
+            <a
+              href={getPath(post.id, post.filePath)}
+              class="jian rise group"
+              style={`--i: ${i + 1}`}
+            >
+              <span class="seal" aria-hidden="true">
+                {post.data.pinned ? "置顶" : "最新"}
+              </span>
+              <span class="font-hand text-[1.375rem] leading-none text-seal">
+                {post.data.pinned ? "pinned —" : "the latest —"}
+              </span>
+              <h2
+                class="mt-2 pe-8 text-[1.375rem] leading-[1.45] font-semibold text-ink transition-colors group-hover:text-wisteria sm:text-[1.625rem]"
+                style={{ viewTransitionName: transitionName(post.id) }}
+              >
+                {post.data.title}
+              </h2>
+              {post.data.description && (
+                <p class="mt-2 line-clamp-3 text-[0.9375rem] leading-[1.8] text-ink-soft">
+                  {post.data.description}
+                </p>
+              )}
+              <p class="mt-4 flex items-center justify-between text-[0.8125rem] text-ink-faint">
+                <time datetime={post.data.pubDatetime.toISOString()}>
+                  {formatDateZh(post.data.pubDatetime, post.data.timezone)}
                 </time>
-              </a>
-            </article>
+                <span class="inline-flex items-center gap-1 text-wisteria">
+                  展信
+                  <IconArrowRight
+                    class="size-4 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
+                </span>
+              </p>
+            </a>
           ))}
         </section>
       )
     }
 
-    <div class="my-8 text-center">
-      <LinkButton href="/posts/">
-        所有文章
-        <IconArrowRight class="inline-block rtl:-rotate-180" />
-      </LinkButton>
+    {
+      listPosts.length > 0 && (
+        <section
+          class="rise mt-10"
+          style="--i: 3"
+          aria-labelledby="recent-title"
+        >
+          <div class="section-title">
+            <h2 id="recent-title" class="eyebrow">
+              近来写下的
+            </h2>
+          </div>
+          <ul>
+            {listPosts.map(post => (
+              <PostItem post={post} as="h3" />
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <div class="mt-8 text-center">
+      <a href="/posts/" class="btn">
+        翻看全部文章
+        <IconArrowRight class="size-4 rtl:-rotate-180" aria-hidden="true" />
+      </a>
     </div>
 
-    <SiteStats />
+    <hr class="wavy" />
+
+    <p class="signature mb-12">
+      — {SITE.author}
+      <span class="seal seal-outline text-sm" aria-hidden="true"
+        >{SITE.seal}</span
+      >
+    </p>
   </main>
-  <Footer />
+
 </Layout>
 
 <script>
-  function setBackUrl() {
-    const indexLayout = (document.querySelector("#main-content") as HTMLElement)
-      ?.dataset?.layout;
-    if (indexLayout) {
-      sessionStorage.setItem("backUrl", "/");
-    }
+  // 抬头日期换成访问当天
+  const el = document.getElementById("dateline");
+  if (el) {
+    el.textContent = new Intl.DateTimeFormat("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(new Date());
   }
-
-  setBackUrl();
-  document.addEventListener("astro:page-load", setBackUrl);
+  // 从首页进入文章后，「返回」回到首页
+  sessionStorage.setItem("backUrl", "/");
 </script>

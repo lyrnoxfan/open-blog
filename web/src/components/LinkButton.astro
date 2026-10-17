@@ -3,19 +3,17 @@ import type { HTMLAttributes } from "astro/types";
 
 type Props = { disabled?: boolean } & HTMLAttributes<"a">;
 
-const { disabled, class: className, ...attrs } = Astro.props;
-
-const Button = disabled ? "span" : "a";
+const { disabled, class: className, href, ...attrs } = Astro.props;
 ---
 
-<Button
-  aria-disabled={disabled}
-  class:list={[
-    "group inline-flex items-center gap-1",
-    { "hover:text-accent": !disabled },
-    className,
-  ]}
-  {...attrs}
->
-  <slot />
-</Button>
+{
+  disabled ? (
+    <span aria-disabled="true" class={className} {...attrs}>
+      <slot />
+    </span>
+  ) : (
+    <a href={href} class={className} {...attrs}>
+      <slot />
+    </a>
+  )
+}

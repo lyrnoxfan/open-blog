@@ -4,24 +4,23 @@
 
 <div
   id="reading-progress"
-  class="pointer-events-none fixed top-0 left-0 z-[100] h-[3px] w-0 bg-accent transition-[width] duration-100 ease-out"
+  class="pointer-events-none fixed top-0 left-0 z-[100] h-[2px] w-0 rounded-r-full bg-gradient-to-r from-wisteria to-seal"
   aria-hidden="true"
-></div>
+>
+</div>
 
 <script>
   function updateReadingProgress() {
     const bar = document.getElementById("reading-progress");
     if (!bar) return;
 
-    const scrollTop =
-      window.scrollY || document.documentElement.scrollTop || 0;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
     const docHeight = document.documentElement.scrollHeight;
     const winHeight = window.innerHeight;
     const scrollable = docHeight - winHeight;
 
     // 页面无需滚动时直接显示满格
-    const progress =
-      scrollable > 0 ? Math.min(scrollTop / scrollable, 1) : 1;
+    const progress = scrollable > 0 ? Math.min(scrollTop / scrollable, 1) : 1;
 
     bar.style.width = `${progress * 100}%`;
   }

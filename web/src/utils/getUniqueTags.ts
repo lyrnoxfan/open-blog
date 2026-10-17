@@ -27,8 +27,7 @@ const getUniqueTags = (posts: CollectionEntry<"blog">[]): TagInfo[] => {
   return [...tagMap.entries()]
     .map(([tag, { tagName, count }]) => ({ tag, tagName, count }))
     .sort(
-      (a, b) =>
-        b.count - a.count || a.tagName.localeCompare(b.tagName, "zh-CN")
+      (a, b) => b.count - a.count || a.tagName.localeCompare(b.tagName, "zh-CN")
     );
 };
 

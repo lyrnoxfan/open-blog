@@ -8,7 +8,7 @@
 
 ```
 open-blog/
-├── web/        # Astro 博客网站（AstroPaper 主题改）
+├── web/        # Astro 博客网站（藤笺设计系统，含密码门与在线写作台）
 └── android/    # 原生 Android App（Kotlin，无 WebView）
 ```
 

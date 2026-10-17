@@ -1,0 +1,145 @@
+/*
+ * 藤笺 · 设计令牌（唯一来源）
+ * ---------------------------------------------------------------
+ * 纸：暖米色信纸；墨：深褐近黑；藤：紫藤主色（交互）；印：Letter 原有赭色（印章/手写）。
+ * 所有组件只引用这里的变量 / Tailwind 主题色，不再写死颜色。
+ * functions/_middleware.js（密码页）与 public/lyrnox/index.html（写作台）
+ * 是独立页面，无法引用本文件，二者顶部各保存了一份同名令牌副本，修改时请同步。
+ */
+
+/* 浅色：暖米色信纸（沿用 Muse Letter 的纸色并略提亮） */
+:root,
+html[data-theme="light"] {
+  color-scheme: light;
+
+  /* 纸与墨 */
+  --paper: #f3ebdf;
+  --paper-deep: #ebe0d0;
+  --surface: #fffaf3;
+  --ink: #26221d;
+  --ink-soft: #5f574d;
+  --ink-faint: #8a7f72;
+  --rule: #e2d6c4;
+  --rule-strong: #d0c1ab;
+
+  /* 藤：链接与交互；印：Letter 原有的赭色，用于印章、签名、手写 */
+  --wisteria: #67498f;
+  --wisteria-deep: #523677;
+  --wisteria-soft: #e7ddf0;
+  --wisteria-mist: #f3edf3;
+  --seal: #a13f04;
+  --seal-soft: #f6dfcb;
+  --leaf: #7c8c63;
+  --highlight: #ffe3c0;
+  --tape: rgb(196 176 222 / 55%);
+
+  /* 紫藤花穗五档色（从花梗到花尖由深到浅） */
+  --w0: #5d4291;
+  --w1: #7b5fb3;
+  --w2: #9a82c9;
+  --w3: #bba9dd;
+  --w4: #dcd0ee;
+
+  --shadow-sm: 0 1px 2px rgb(111 101 85 / 8%), 0 2px 8px rgb(111 101 85 / 8%);
+  --shadow-md:
+    0 2px 3px rgb(111 101 85 / 8%), 0 14px 30px -18px rgb(35 34 31 / 30%);
+  --shadow-lg:
+    0 3px 6px rgb(111 101 85 / 10%), 0 24px 44px -20px rgb(35 34 31 / 36%);
+  --grain-opacity: 0.06;
+}
+
+/* 深色：灯下的旧信纸——暖褐纸底、米白墨色，而不是冷灰黑 */
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #221a13;
+  --paper-deep: #2a2018;
+  --surface: #2c2219;
+  --ink: #f1e7d6;
+  --ink-soft: #c4b49d;
+  --ink-faint: #8f7f6b;
+  --rule: #3e3227;
+  --rule-strong: #524335;
+
+  --wisteria: #c6b0ea;
+  --wisteria-deep: #ddd0f5;
+  --wisteria-soft: #3b3043;
+  --wisteria-mist: #2e2527;
+  --seal: #e08d4e;
+  --seal-soft: #47301f;
+  --leaf: #93a079;
+  --highlight: #6b4423;
+  --tape: rgb(170 150 200 / 30%);
+
+  --w0: #9a7fd0;
+  --w1: #ad94db;
+  --w2: #bba6e0;
+  --w3: #9483b6;
+  --w4: #6a5c80;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 25%), 0 14px 30px -16px rgb(0 0 0 / 60%);
+  --shadow-lg: 0 4px 8px rgb(0 0 0 / 30%), 0 24px 44px -18px rgb(0 0 0 / 70%);
+  --grain-opacity: 0.05;
+}
+
+:root {
+  /* 字体：标题用宋体系衬线（有信笺感），正文用无衬线（手机长读更清楚） */
+  --ff-serif:
+    "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong",
+    "Noto Serif CJK SC", Georgia, serif;
+  --ff-sans:
+    system-ui, -apple-system, "PingFang SC", "HarmonyOS Sans SC", "MiSans",
+    "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  /* Letter 的手写与签名字体（只用于西文点缀，中文自动回落到衬线） */
+  --ff-hand: "Caveat", var(--ff-serif);
+  --ff-sig: "Oooh Baby", "Caveat", var(--ff-serif);
+  --ff-mono:
+    var(--font-google-sans-code), ui-monospace, "SFMono-Regular", "Menlo",
+    monospace;
+
+  --radius-sm: 0.5rem;
+  --radius: 0.875rem;
+  --radius-lg: 1.25rem;
+  --measure: 42rem; /* 正文栏宽 ≈ 36 个汉字 @17px */
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: 180ms;
+
+  --dock-h: 4.25rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Tailwind 主题：把令牌暴露为 bg-paper / text-ink / border-rule … */
+@theme inline {
+  --font-sans: var(--ff-sans);
+  --font-serif: var(--ff-serif);
+  --font-mono: var(--ff-mono);
+  --font-hand: var(--ff-hand);
+  --font-sig: var(--ff-sig);
+
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-wisteria: var(--wisteria);
+  --color-wisteria-deep: var(--wisteria-deep);
+  --color-wisteria-soft: var(--wisteria-soft);
+  --color-wisteria-mist: var(--wisteria-mist);
+  --color-seal: var(--seal);
+  --color-seal-soft: var(--seal-soft);
+
+  /* 兼容旧类名（typography 插件与少量旧样式仍会用到） */
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-accent: var(--wisteria);
+  --color-muted: var(--paper-deep);
+  --color-border: var(--rule);
+
+  --radius-card: var(--radius);
+  --shadow-card: var(--shadow-md);
+}

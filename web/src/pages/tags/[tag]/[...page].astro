@@ -4,8 +4,7 @@ import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Main from "@/layouts/Main.astro";
 import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
-import Card from "@/components/Card.astro";
+import PostList from "@/components/PostList.astro";
 import Pagination from "@/components/Pagination.astro";
 import getUniqueTags from "@/utils/getUniqueTags";
 import getSortedPosts from "@/utils/getSortedPosts";
@@ -33,19 +32,22 @@ export const getStaticPaths = (async ({ paginate }) => {
 const { page, tagName } = Astro.props;
 ---
 
-<Layout title={`Tag: ${tagName} | ${SITE.title}`}>
+<Layout title={`#${tagName} | ${SITE.title}`}>
   <Header />
   <Main
-    pageTitle={[`标签 #`, tagName]}
-    titleTransition={tagName}
-    pageDesc={`带有「${tagName}」标签的所有文章。`}
+    eyebrow="标签"
+    pageTitle={`# ${tagName}`}
+    pageDesc={`「${tagName}」下共 ${page.total} 篇。`}
   >
-    <ul>
-      {page.data.map(data => <Card {...data} />)}
-    </ul>
+    <PostList posts={page.data} />
+    <Pagination {page} />
+    <p class="mt-8 text-center">
+      <a
+        href="/tags/"
+        class="text-sm text-ink-soft transition-colors hover:text-wisteria"
+      >
+        ← 全部标签
+      </a>
+    </p>
   </Main>
-
-  <Pagination {page} />
-
-  <Footer noMarginTop={page.lastPage > 1} />
 </Layout>

@@ -18,10 +18,10 @@
       "https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.css",
       "https://unpkg.com/twikoo@1.6.44/dist/twikoo.css",
     ];
-    const ENV_ID = "https://your-twikoo.example.com"; // 换成你的 Twikoo 服务地址
+    const ENV_ID = "https://your-twikoo.example.com"; // 改成你自己的 Twikoo 服务地址，没有就删掉 PostDetails 里的评论组件引用
     const LANG = "zh-CN";
     const EMPTY_HINT_HTML =
-      '<p style="color:#b91c1c;font-size:.95rem;">评论区暂时不可用，请检查 Twikoo envId 或网络连接。</p>';
+      '<p style="color:var(--seal);font-size:.9rem;">评论区暂时不可用，请检查 Twikoo envId 或网络连接。</p>';
 
     function loadStyle(href) {
       return new Promise((resolve, reject) => {
@@ -188,7 +188,7 @@
 
 <style>
   #tcomment {
-    margin-top: 2.5rem;
+    margin-top: 1rem;
     min-height: 1.5rem;
     opacity: 0;
     pointer-events: none;
@@ -199,27 +199,45 @@
     pointer-events: auto;
   }
 
-  /* Twikoo 与本站设计语言统一：圆角、柔和边框、强调色 */
+  /* Twikoo 跟随站点令牌：纸面输入框、藤色强调 */
   #tcomment :global(.tk-input),
-  #tcomment :global(.tk-textarea) {
-    border-radius: 1rem !important;
-    border-color: var(--border) !important;
+  #tcomment :global(.tk-textarea),
+  #tcomment :global(.el-input__inner),
+  #tcomment :global(.el-textarea__inner) {
+    border-color: var(--rule-strong) !important;
+    border-radius: var(--radius) !important;
+    background-color: var(--surface) !important;
+    color: var(--ink) !important;
   }
-  #tcomment :global(.tk-input:focus),
-  #tcomment :global(.tk-textarea:focus) {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.12) !important;
+  #tcomment :global(.el-input__inner:focus),
+  #tcomment :global(.el-textarea__inner:focus) {
+    border-color: var(--wisteria) !important;
+    box-shadow: 0 0 0 4px var(--wisteria-soft) !important;
   }
-  #tcomment :global(.tk-submit) {
+  #tcomment :global(.tk-submit .el-button--primary),
+  #tcomment :global(.el-button--primary) {
+    border-color: var(--wisteria) !important;
     border-radius: 999px !important;
+    background-color: var(--wisteria) !important;
+    color: var(--paper) !important;
   }
-  #tcomment :global(.tk-comment) {
-    border-radius: 1rem !important;
+  #tcomment :global(.el-button--primary.is-disabled) {
+    opacity: 0.45;
   }
   #tcomment :global(.tk-avatar) {
     border-radius: 999px !important;
   }
+  #tcomment :global(.tk-comments-title),
+  #tcomment :global(.tk-content),
+  #tcomment :global(.tk-nick) {
+    color: var(--ink);
+  }
+  #tcomment :global(.tk-time),
+  #tcomment :global(.tk-extras),
+  #tcomment :global(.tk-footer) {
+    color: var(--ink-faint);
+  }
   #tcomment :global(a) {
-    color: var(--accent) !important;
+    color: var(--wisteria) !important;
   }
 </style>

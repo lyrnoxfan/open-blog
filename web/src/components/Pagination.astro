@@ -14,79 +14,71 @@ const { page } = Astro.props;
 
 {
   page.lastPage > 1 && (
-    <nav
-      class="relative mt-auto mb-8 flex items-center justify-center"
-      role="navigation"
-      aria-label="Pagination Navigation"
-    >
+    <nav class="mt-10 flex items-center justify-center gap-2" aria-label="分页">
       <LinkButton
         disabled={!page.url.prev}
         href={page.url.prev as string}
-        class:list={[
-          "me-3 btn-pill btn-pill-hover select-none",
-          { "pointer-events-none opacity-40": !page.url.prev },
-        ]}
-        aria-label="Goto Previous Page"
+        class="btn px-4 select-none"
+        aria-label="上一页"
       >
-        <IconArrowLeft class="inline-block rtl:rotate-180" />
-        上一页
+        <IconArrowLeft class="size-4 rtl:rotate-180" aria-hidden="true" />
+        <span class="max-[360px]:sr-only">上一页</span>
       </LinkButton>
 
-      {/* --- 页码显示与跳转区域 --- */}
       <div class="relative" id="pagination-container">
-        {/* 点击触发器 */}
         <button
           id="page-trigger"
-          class="px-3 py-1 mx-2 rounded-full hover:bg-muted transition-colors cursor-pointer font-medium tabular-nums"
-          title="点击跳转页面"
+          class="inline-flex min-h-11 items-center rounded-full px-4 font-serif text-[0.9375rem] text-ink-soft tabular-nums transition-colors hover:bg-paper-deep hover:text-ink"
+          title="跳转到指定页"
+          aria-haspopup="dialog"
         >
-          {page.currentPage} / {page.lastPage}
+          <span class="text-ink">{page.currentPage}</span>
+          <span class="mx-1.5 text-ink-faint">/</span>
+          {page.lastPage}
         </button>
 
-        {/* 弹出的输入框 */}
         <div
           id="page-jump-popup"
           class="absolute bottom-full left-1/2 z-50 mb-3 hidden -translate-x-1/2"
         >
-          <div class="bg-surface shadow-lg rounded-2xl border border-border p-2 flex items-center gap-2">
+          <div class="flex items-center gap-2 rounded-2xl border border-rule bg-surface p-2 shadow-[var(--shadow-lg)]">
+            <label for="page-input" class="sr-only">
+              页码
+            </label>
             <input
               type="number"
               id="page-input"
               min="1"
               max={page.lastPage}
               placeholder="页码"
-              class="w-16 h-8 px-2 text-center border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background text-foreground text-sm"
+              inputmode="numeric"
+              class="h-9 w-16 px-2 text-center text-sm"
             />
             <button
               id="page-go"
-              class="h-8 px-3 bg-accent text-background rounded-full hover:opacity-90 text-sm font-medium shrink-0"
+              class="h-9 shrink-0 rounded-full bg-wisteria px-4 text-sm font-medium text-paper transition-colors hover:bg-wisteria-deep"
             >
-              GO
+              前往
             </button>
           </div>
-          {/* 小三角箭头 (视觉连接) */}
-          <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-surface"></div>
         </div>
       </div>
-      {/* --- 结束修改 --- */}
 
       <LinkButton
         disabled={!page.url.next}
         href={page.url.next as string}
-        class:list={[
-          "ms-3 btn-pill btn-pill-hover select-none",
-          { "pointer-events-none opacity-40": !page.url.next },
-        ]}
-        aria-label="Goto Next Page"
+        class="btn px-4 select-none"
+        aria-label="下一页"
       >
-        下一页
-        <IconArrowRight class="inline-block rtl:rotate-180" />
+        <span class="max-[360px]:sr-only">下一页</span>
+        <IconArrowRight class="size-4 rtl:rotate-180" aria-hidden="true" />
       </LinkButton>
     </nav>
   )
 }
 
 <script
+  is:inline
   define:vars={{
     currentPage: page.currentPage,
     lastPage: page.lastPage,
@@ -157,9 +149,9 @@ const { page } = Astro.props;
         window.location.href = targetUrl;
       } else {
         // 错误抖动提示
-        input.classList.add("ring-2", "ring-red-500", "border-red-500");
+        input.setAttribute("aria-invalid", "true");
         setTimeout(() => {
-          input.classList.remove("ring-2", "ring-red-500", "border-red-500");
+          input.removeAttribute("aria-invalid");
         }, 800);
       }
     };
