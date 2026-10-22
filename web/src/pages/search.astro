@@ -8,12 +8,12 @@ import { SITE } from "@/config";
 const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
 ---
 
-<Layout title={`搜索 | ${SITE.title}`}>
+<Layout title={`寻章 | ${SITE.title}`}>
   <Header />
   <Main
-    eyebrow="Search"
-    pageTitle="搜索"
-    pageDesc="在所有文章里找一句话、一个词。"
+    eyebrow="寻章"
+    pageTitle="寻章"
+    pageDesc="一字一句，皆可寻得。"
   >
     <div id="pagefind-search" data-backurl={backUrl}></div>
   </Main>
@@ -50,14 +50,14 @@ const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
         showImages: false,
         showSubResults: true,
         translations: {
-          placeholder: "输入关键词…",
+          placeholder: "输入字句…",
           clear_search: "清除",
-          load_more: "加载更多",
-          search_label: "搜索本站",
-          zero_results: "没有找到与「[SEARCH_TERM]」相关的文章",
-          many_results: "找到 [COUNT] 篇与「[SEARCH_TERM]」相关的文章",
-          one_result: "找到 1 篇与「[SEARCH_TERM]」相关的文章",
-          searching: "正在搜索「[SEARCH_TERM]」…",
+          load_more: "再看些",
+          search_label: "寻章",
+          zero_results: "未寻得与「[SEARCH_TERM]」相关的篇章",
+          many_results: "寻得 [COUNT] 篇与「[SEARCH_TERM]」相关",
+          one_result: "寻得 1 篇与「[SEARCH_TERM]」相关",
+          searching: "正在寻找「[SEARCH_TERM]」…",
         },
         processTerm: function (term: string) {
           params.set("q", term); // Update the `q` parameter in the URL
@@ -78,6 +78,8 @@ const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
 
       // Reset search param if search input is cleared
       const searchInput = document.querySelector(".pagefind-ui__search-input");
+      // Pagefind 只给输入框 title，没有可见/可访问标签（axe: label-title-only）
+      searchInput?.setAttribute("aria-label", "搜索文章");
       const clearButton = document.querySelector(".pagefind-ui__search-clear");
       searchInput?.addEventListener("input", resetSearchParam);
       clearButton?.addEventListener("click", resetSearchParam);

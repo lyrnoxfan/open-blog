@@ -28,7 +28,7 @@ export function authorize(context, write = false) {
   if (
     origin !== url.origin ||
     (fetchSite && fetchSite !== "same-origin") ||
-    request.headers.get("X-Lyrnox-Request") !== "1"
+    request.headers.get("X-Blog-Request") !== "1"
   ) {
     return apiError("Forbidden", 403);
   }
@@ -66,7 +66,36 @@ function config(env) {
   const repo = env.GITHUB_REPO || "your-username/your-repo";
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) throw new Error("Invalid GITHUB_REPO");
   if (!env.GITHUB_TOKEN) throw new Error("GITHUB_TOKEN is not configured");
-  return { repo, branch: env.GITHUB_BRANCH || "main", token: env.GITHUB_TOKEN };
+  return { repo, branch: env.GITHUB_BRANCH || "master", token: env.GITHUB_TOKEN };
+}
+
+// 一次 GraphQL 取回某目录下所有文件的文本（oid -> text）。
+// 列表页原先每篇文章一次 REST 调用，文章多了会超出 Workers 单请求子请求上限（免费版 50），
+// 超出的文章只显示 slug。失败时返回 null，调用方回退到逐个 REST。
+export async function githubTreeTexts(context, branch, dir) {
+  try {
+    const { repo, token } = config(context.env);
+    const [owner, name] = repo.split("/");
+    const response = await fetch("https://api.github.com/graphql", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "blog-admin",
+      },
+      body: JSON.stringify({
+        query: "query($o:String!,$n:String!,$e:String!){repository(owner:$o,name:$n){object(expression:$e){... on Tree{entries{oid object{... on Blob{text}}}}}}}",
+        variables: { o: owner, n: name, e: `${branch}:${dir}` },
+      }),
+    });
+    if (!response.ok) return null;
+    const json = await response.json();
+    const entries = json?.data?.repository?.object?.entries;
+    if (!Array.isArray(entries)) return null;
+    return new Map(entries.map(entry => [entry.oid, entry.object?.text]));
+  } catch {
+    return null;
+  }
 }
 
 export async function github(context, endpoint, init = {}) {
@@ -90,7 +119,7 @@ export async function github(context, endpoint, init = {}) {
 }
 
 export function branch(context) {
-  return context.env.GITHUB_BRANCH || "main";
+  return context.env.GITHUB_BRANCH || "master";
 }
 
 // 同步的 branch() 保留给不需要网络的场景；真正调 GitHub API 时用这个，

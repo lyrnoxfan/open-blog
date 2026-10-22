@@ -8,6 +8,7 @@ import SiteStats from "@/components/SiteStats.astro";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import getSortedPosts from "@/utils/getSortedPosts";
 import { getPath } from "@/utils/getPath";
+import { countWords } from "@/utils/countWords";
 import { formatDateZh, toZoned, transitionName } from "@/utils/date";
 import { SITE } from "@/config";
 
@@ -29,109 +30,109 @@ const dateline = toZoned(new Date()).format("dddd, MMMM D, YYYY");
 <Layout>
   <Wisteria />
   <Header />
-
   <main id="main-content" data-layout="index" class="relative z-10 app-layout">
-    <section class="rise pt-2 pb-10 sm:pt-6">
-      <p class="dateline" id="dateline">{dateline}</p>
-      <h1
-        class="mt-4 text-[1.75rem] leading-[1.55] font-semibold tracking-[0.02em] sm:text-[2.125rem]"
-      >
-        个人<span class="hl">技术记录</span>，<br
-          class="sm:hidden"
-        />与一些必要的备忘。
-      </h1>
+    <section class="hero rise">
+      <p class="dateline" id="dateline">
+        {dateline}
+      </p>
+      <p class="lunar" id="lunar"></p>
+      <!-- 单行书写：换行会在「，」后多出一个空格 -->
+      <!-- prettier-ignore -->
+      <h1 class="hero-title">藤花半架，<br class="sm:hidden" /><span class="hl">闲笔</span>数行。</h1>
       <SiteStats class="mt-4" />
+      <p class="hero-aside">
+        <a href="/random/" class="text-link">
+          随手抽一封
+          <IconArrowRight class="size-3.5 rtl:-rotate-180" aria-hidden="true" />
+        </a>
+      </p>
     </section>
 
-    {
-      featuredPosts.length > 0 && (
-        <section
-          aria-label={hasPinned ? "置顶文章" : "最新文章"}
-          class="space-y-8 pb-4"
-        >
-          {featuredPosts.map((post, i) => (
-            <a
-              href={getPath(post.id, post.filePath)}
-              class="jian rise group"
-              style={`--i: ${i + 1}`}
+    {featuredPosts.length > 0 && (
+      <section aria-label={hasPinned ? "置顶" : "新笺"} class="space-y-8">
+        {featuredPosts.map((post, i) => (
+          <a
+            href={getPath(post.id, post.filePath)}
+            class="jian rise"
+            style={`--i: ${i + 1}`}
+          >
+            <span class="seal seal-v" aria-hidden="true">
+              {post.data.pinned ? "置顶" : "新笺"}
+            </span>
+            <span class="jian-kicker">
+              {post.data.pinned ? "卷首 ·" : "新近 ·"}
+            </span>
+            <h2
+              class="jian-title"
+              style={{ viewTransitionName: transitionName(post.id) }}
             >
-              <span class="seal" aria-hidden="true">
-                {post.data.pinned ? "置顶" : "最新"}
-              </span>
-              <span class="font-hand text-[1.375rem] leading-none text-seal">
-                {post.data.pinned ? "pinned —" : "the latest —"}
-              </span>
-              <h2
-                class="mt-2 pe-8 text-[1.375rem] leading-[1.45] font-semibold text-ink transition-colors group-hover:text-wisteria sm:text-[1.625rem]"
-                style={{ viewTransitionName: transitionName(post.id) }}
-              >
-                {post.data.title}
-              </h2>
-              {post.data.description && (
-                <p class="mt-2 line-clamp-3 text-[0.9375rem] leading-[1.8] text-ink-soft">
-                  {post.data.description}
-                </p>
-              )}
-              <p class="mt-4 flex items-center justify-between text-[0.8125rem] text-ink-faint">
+              {post.data.title}
+            </h2>
+            {post.data.description && (
+              <p class="jian-desc">{post.data.description}</p>
+            )}
+            <p class="jian-foot">
+              <span>
                 <time datetime={post.data.pubDatetime.toISOString()}>
                   {formatDateZh(post.data.pubDatetime, post.data.timezone)}
                 </time>
-                <span class="inline-flex items-center gap-1 text-wisteria">
-                  展信
-                  <IconArrowRight
-                    class="size-4 transition-transform group-hover:translate-x-0.5"
-                    aria-hidden="true"
-                  />
+                <span class="mx-1.5" aria-hidden="true">
+                  ·
                 </span>
-              </p>
-            </a>
-          ))}
-        </section>
-      )
-    }
+                {countWords(post.body ?? "").toLocaleString("zh-CN")} 字
+              </span>
+              <span class="jian-go">
+                展卷
+                <IconArrowRight class="rtl:-rotate-180" aria-hidden="true" />
+              </span>
+            </p>
+          </a>
+        ))}
+      </section>
+    )}
 
-    {
-      listPosts.length > 0 && (
-        <section
-          class="rise mt-10"
-          style="--i: 3"
-          aria-labelledby="recent-title"
-        >
-          <div class="section-title">
-            <h2 id="recent-title" class="eyebrow">
-              近来写下的
-            </h2>
-          </div>
-          <ul>
-            {listPosts.map(post => (
-              <PostItem post={post} as="h3" />
-            ))}
-          </ul>
-        </section>
-      )
-    }
+    {listPosts.length > 0 && (
+      <section class="rise rise-3 mt-12" aria-labelledby="recent-title">
+        <div class="section-title">
+          <h2 id="recent-title" class="eyebrow">
+            近作
+          </h2>
+          <a href="/archives/" class="text-link">
+            书目
+            <IconArrowRight
+              class="size-3.5 rtl:-rotate-180"
+              aria-hidden="true"
+            />
+          </a>
+        </div>
+        <ul>
+          {listPosts.map(post => (
+            <PostItem post={post} as="h3" />
+          ))}
+        </ul>
+      </section>
+    )}
 
     <div class="mt-8 text-center">
       <a href="/posts/" class="btn">
-        翻看全部文章
-        <IconArrowRight class="size-4 rtl:-rotate-180" aria-hidden="true" />
+        览全部文集
+        <IconArrowRight class="rtl:-rotate-180" aria-hidden="true" />
       </a>
     </div>
 
     <hr class="wavy" />
-
     <p class="signature mb-12">
       — {SITE.author}
-      <span class="seal seal-outline text-sm" aria-hidden="true"
-        >{SITE.seal}</span
-      >
+      <span class="seal seal-outline text-sm" aria-hidden="true">
+        {SITE.seal}
+      </span>
     </p>
   </main>
-
 </Layout>
 
 <script>
-  // 抬头日期换成访问当天
+  // 抬头日期换成访问当天；再添一行农历（浏览器不支持农历时不显示）
+  const now = new Date();
   const el = document.getElementById("dateline");
   if (el) {
     el.textContent = new Intl.DateTimeFormat("en-US", {
@@ -139,8 +140,47 @@ const dateline = toZoned(new Date()).format("dddd, MMMM D, YYYY");
       year: "numeric",
       month: "long",
       day: "numeric",
-    }).format(new Date());
+    }).format(now);
+  }
+  const lunar = document.getElementById("lunar");
+  if (lunar) {
+    try {
+      const text = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+        dateStyle: "long",
+      })
+        .format(now)
+        .replace(/^\d+/, "");
+      if (/年/.test(text) && !/\d/.test(text)) {
+        lunar.textContent = text.replace("年", "年 ");
+      }
+    } catch {
+      /* 不支持农历历法时保持空白 */
+    }
   }
   // 从首页进入文章后，「返回」回到首页
   sessionStorage.setItem("backUrl", "/");
 </script>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    padding-block: 0.75rem 2.5rem;
+  }
+  @media (width >= 640px) {
+    .hero {
+      padding-top: 1.5rem;
+    }
+  }
+  .hero-aside {
+    margin-top: 0.85rem;
+    font-size: 0.875rem;
+  }
+  .hero-title {
+    margin-top: 1rem;
+    font-size: clamp(1.75rem, 1.45rem + 1.4vw, 2.25rem);
+    font-weight: 600;
+    line-height: 1.55;
+    letter-spacing: 0.04em;
+  }
+</style>

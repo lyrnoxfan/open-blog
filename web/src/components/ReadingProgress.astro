@@ -1,48 +1,112 @@
 ---
-/* 阅读进度条：固定在视口最顶部，模拟浏览器地址栏加载条，随文章滚动推进 */
+/* 阅读进度条 + 当前小节名。
+ * 进度条：视口顶端细线，从藤紫渐到赭色（回顶按钮的圆环也显示进度，故不再另设百分比浮条）。
+ * 小节名：进度条下方一行极淡的字，取自最近的 h2/h3 文本。 */
 ---
 
-<div
-  id="reading-progress"
-  class="pointer-events-none fixed top-0 left-0 z-[100] h-[2px] w-0 rounded-r-full bg-gradient-to-r from-wisteria to-seal"
-  aria-hidden="true"
->
-</div>
+<div id="reading-progress" class="reading-progress" aria-hidden="true"></div>
+<p id="reading-section" class="reading-section" aria-hidden="true"></p>
 
 <script>
-  function updateReadingProgress() {
-    const bar = document.getElementById("reading-progress");
-    if (!bar) return;
-
-    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-    const docHeight = document.documentElement.scrollHeight;
-    const winHeight = window.innerHeight;
-    const scrollable = docHeight - winHeight;
-
-    // 页面无需滚动时直接显示满格
-    const progress = scrollable > 0 ? Math.min(scrollTop / scrollable, 1) : 1;
-
-    bar.style.width = `${progress * 100}%`;
-  }
+  // 首屏与 astro:page-load 可能都会触发初始化：每次先撤掉上一轮的监听，避免重复绑定
+  let controller: AbortController | null = null;
 
   function initReadingProgress() {
-    updateReadingProgress();
+    controller?.abort();
+    controller = new AbortController();
+    const { signal } = controller;
+    const el = document.getElementById("reading-progress");
+    const sectionEl = document.getElementById("reading-section");
+    if (!el) return;
+    const bar: HTMLElement = el;
+
+    // 收集文章内 h2/h3 作为小节锚点
+    const article = document.getElementById("article");
+    const headings = article
+      ? Array.from(article.querySelectorAll<HTMLHeadingElement>("h2, h3"))
+      : [];
 
     let ticking = false;
+    let lastSection: Element | null = null;
+
+    function update() {
+      ticking = false;
+      const scrollTop =
+        window.scrollY || document.documentElement.scrollTop || 0;
+      const docHeight = document.documentElement.scrollHeight;
+      const winHeight = window.innerHeight;
+      const scrollable = docHeight - winHeight;
+
+      const progress = scrollable > 0 ? Math.min(scrollTop / scrollable, 1) : 1;
+      bar.style.transform = `scaleX(${progress})`;
+
+      // 当前小节名：找最后一个顶到视口 25% 线的标题
+      if (sectionEl && headings.length) {
+        const line = winHeight * 0.25;
+        let current: Element | null = null;
+        for (const h of headings) {
+          if (h.getBoundingClientRect().top <= line) current = h;
+          else break;
+        }
+        // 只在小节变化时写 DOM，避免每帧重排
+        if (current !== lastSection) {
+          lastSection = current;
+          sectionEl.textContent = current ? (current.textContent ?? "") : "";
+          sectionEl.style.opacity = current ? "1" : "0";
+        }
+      }
+    }
+
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => {
-        updateReadingProgress();
-        ticking = false;
-      });
+      requestAnimationFrame(update);
     };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", updateReadingProgress);
+    window.addEventListener("scroll", onScroll, { passive: true, signal });
+    window.addEventListener("resize", update, { signal });
+    update();
   }
 
-  // 首屏加载与视图过渡后都重新初始化
   initReadingProgress();
   document.addEventListener("astro:page-load", initReadingProgress);
 </script>
+
+<style>
+  .reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, var(--wisteria), var(--seal));
+    pointer-events: none;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+
+  /* 当前小节名：进度条下方一行极淡的字 */
+  .reading-section {
+    position: fixed;
+    top: 0.4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99;
+    max-width: 60vw;
+    color: var(--ink-soft);
+    font-family: var(--ff-serif);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur) ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (width < 640px) {
+    .reading-section {
+      display: none;
+    }
+  }
+</style>

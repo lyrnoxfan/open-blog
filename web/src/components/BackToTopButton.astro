@@ -1,5 +1,17 @@
-<button class="back-to-top" aria-label="返回顶部" id="backToTop" hidden>
+<button
+  type="button"
+  class="back-to-top is-hidden"
+  aria-label="返回顶部"
+  id="backToTop"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <svg class="btt-ring" viewBox="0 0 44 44" aria-hidden="true">
+    <circle class="btt-ring-bg" cx="22" cy="22" r="20"></circle>
+    <circle class="btt-ring-fg" cx="22" cy="22" r="20"></circle>
+  </svg>
   <svg
+    class="btt-arrow"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="none"
@@ -17,15 +29,46 @@
 <script>
   const btn = document.getElementById("backToTop");
   if (btn) {
+    const ring = btn.querySelector<SVGCircleElement>(".btt-ring-fg");
+    const RING_LEN = 2 * Math.PI * 20;
+    if (ring) {
+      ring.style.strokeDasharray = String(RING_LEN);
+      ring.style.strokeDashoffset = String(RING_LEN);
+    }
     const toggle = () => {
-      btn.hidden = window.scrollY < 480;
+      const shouldHide = window.scrollY < 480;
+      if (shouldHide !== btn.classList.contains("is-hidden")) {
+        if (shouldHide && document.activeElement === btn) btn.blur();
+        btn.classList.toggle("is-hidden", shouldHide);
+        btn.tabIndex = shouldHide ? -1 : 0;
+        if (shouldHide) btn.setAttribute("aria-hidden", "true");
+        else btn.removeAttribute("aria-hidden");
+      }
+      if (!ring) return;
+      const scrollable =
+        document.documentElement.scrollHeight - window.innerHeight;
+      const progress =
+        scrollable > 0 ? Math.min(window.scrollY / scrollable, 1) : 1;
+      ring.style.strokeDashoffset = String(RING_LEN - progress * RING_LEN);
     };
     btn.addEventListener("click", () => {
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
       window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
     });
     toggle();
-    window.addEventListener("scroll", toggle, { passive: true });
+    let ticking = false;
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          ticking = false;
+          toggle();
+        });
+      },
+      { passive: true }
+    );
   }
 </script>
 
@@ -37,32 +80,64 @@
     bottom: calc(var(--dock-h) + 1.75rem + var(--safe-bottom));
     z-index: 39;
     display: inline-grid;
-    place-items: center;
     width: 2.75rem;
     height: 2.75rem;
+    place-items: center;
     border: 1px solid var(--rule);
     border-radius: 999px;
-    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    background: var(--surface);
     color: var(--wisteria);
     box-shadow: var(--shadow-md);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
     transition:
-      transform var(--dur) var(--ease-out),
+      transform var(--dur) var(--ease-spring),
+      box-shadow var(--dur) var(--ease-out),
       opacity var(--dur) ease;
   }
   .back-to-top:hover {
     transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
   }
-  .back-to-top[hidden] {
-    display: inline-grid;
+  .back-to-top:active {
+    transform: scale(0.94);
+  }
+  .back-to-top.is-hidden {
     opacity: 0;
     pointer-events: none;
     transform: translateY(8px);
   }
-  .back-to-top svg {
+  .btt-ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .btt-ring-bg {
+    fill: none;
+    stroke: var(--rule);
+    stroke-width: 1.5;
+  }
+  .btt-ring-fg {
+    fill: none;
+    stroke: var(--wisteria);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 80ms linear;
+  }
+  .btt-arrow {
+    position: relative;
     width: 1.125rem;
     height: 1.125rem;
+    transition: transform var(--dur) var(--ease-spring);
+  }
+  .back-to-top:hover .btt-arrow {
+    transform: translateY(-1px);
+  }
+  @media (width <= 340px) {
+    /* 极窄屏：居中的续读胶囊右缘会贴到按钮左缘（320px 下重叠约 1px），右移让出空隙 */
+    .back-to-top {
+      right: 0.5rem;
+    }
   }
   @media (width >= 640px) {
     .back-to-top {

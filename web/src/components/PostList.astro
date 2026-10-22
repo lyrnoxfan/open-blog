@@ -1,6 +1,6 @@
 ---
 /**
- * 文章列表：/posts 与 /tags/[tag] 共用，按年份分组。
+ * 文章列表：/posts 与 /tags/[tag] 共用，按年份分组（年份为手写赭色大字）。
  */
 import type { CollectionEntry } from "astro:content";
 import PostItem from "./PostItem.astro";
@@ -18,15 +18,13 @@ for (const post of posts) {
 }
 ---
 
-{
-  groups.map(group => (
-    <section aria-label={`${group.year} 年`}>
-      <h2 class="year-mark">{group.year}</h2>
-      <ul>
-        {group.posts.map(post => (
-          <PostItem post={post} as="h3" />
-        ))}
-      </ul>
-    </section>
-  ))
-}
+{groups.map(group => (
+  <section aria-label={`${group.year} 年`}>
+    <h2 class="year-mark">{group.year}</h2>
+    <ul>
+      {group.posts.map(post => (
+        <PostItem post={post} as="h3" />
+      ))}
+    </ul>
+  </section>
+))}

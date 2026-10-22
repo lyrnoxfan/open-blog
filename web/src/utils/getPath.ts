@@ -28,9 +28,11 @@ export function getPath(
   const slug = blogId.length > 0 ? blogId.slice(-1) : blogId;
 
   // If not inside the sub-dir, simply return the file path
-  if (!pathSegments || pathSegments.length < 1) {
-    return [basePath, slug].join("/");
-  }
-
-  return [basePath, ...pathSegments, slug].join("/");
+  const segments =
+    !pathSegments || pathSegments.length < 1
+      ? [basePath, slug]
+      : [basePath, ...pathSegments, slug];
+  const path = segments.join("/");
+  // 站内链接与 canonical 统一带尾斜杠，免一次 308 跳转；路由参数（includeBase=false）不带
+  return includeBase ? `${path}/` : path;
 }

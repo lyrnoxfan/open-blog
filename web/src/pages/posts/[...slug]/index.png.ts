@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { getCollection, type CollectionEntry } from "astro:content";
 import { getPath } from "@/utils/getPath";
 import { generateOgImageForPost } from "@/utils/generateOgImages";
+import postFilter from "@/utils/postFilter";
 import { SITE } from "@/config";
 
 export async function getStaticPaths() {
@@ -9,8 +10,9 @@ export async function getStaticPaths() {
     return [];
   }
 
+  // 与文章页同一口径：草稿、未来发布时间的文章都不生成页面，也不生成 OG 图
   const posts = await getCollection("blog").then(p =>
-    p.filter(({ data }) => !data.draft && !data.ogImage)
+    p.filter(post => postFilter(post) && !post.data.ogImage)
   );
 
   return posts.map(post => ({

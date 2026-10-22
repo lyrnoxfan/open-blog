@@ -6,18 +6,13 @@
 export function countWords(text: string): number {
   if (!text) return 0;
 
-  const cjkMatches = text.match(
-    /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]/g
-  );
-  const cjkCount = cjkMatches ? cjkMatches.length : 0;
+  const cjkPattern = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/g;
+  const cjkCount = (text.match(cjkPattern) ?? []).length;
 
-  const withoutCjk = text.replace(
-    /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]/g,
-    " "
-  );
-  const wordCount = withoutCjk
-    .split(/[^A-Za-z0-9']+/)
-    .filter(word => word.length > 0).length;
+  const withoutCjk = text.replace(cjkPattern, " ");
+  const wordCount = (
+    withoutCjk.match(/[A-Za-z0-9]+(?:['’][A-Za-z0-9]+)*/g) ?? []
+  ).length;
 
   return cjkCount + wordCount;
 }

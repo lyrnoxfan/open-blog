@@ -16,18 +16,22 @@ const { frontmatter } = Astro.props;
   <Header />
   <main id="main-content" class="app-layout">
     <header class="page-head rise">
-      <p class="eyebrow">About</p>
+      <span class="page-mark" aria-hidden="true">
+        我
+      </span>
+      <p class="eyebrow">自述</p>
       <h1>{frontmatter.title}</h1>
+      {frontmatter.description && <p class="lead">{frontmatter.description}</p>}
     </header>
-    <section id="about" class="app-prose rise" style="--i: 1">
+    <section id="about" class="app-prose rise rise-1">
       <slot />
     </section>
     <hr class="wavy" />
     <p class="signature mb-12">
       — {SITE.author}
-      <span class="seal seal-outline text-sm" aria-hidden="true"
-        >{SITE.seal}</span
-      >
+      <span class="seal seal-outline text-sm" aria-hidden="true">
+        {SITE.seal}
+      </span>
     </p>
   </main>
 </Layout>

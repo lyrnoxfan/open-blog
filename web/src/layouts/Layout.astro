@@ -1,5 +1,11 @@
 ---
 import { Font } from "astro:assets";
+// 标题衬线 + 手写/签名字体：自托管（原 Google Fonts 在国内加载不了）。
+// 打包进带哈希的 /_astro/*.css，长期缓存；按 unicode-range 分片，只下载用到的字。
+import "@fontsource-variable/noto-serif-sc/wght.css";
+import "@fontsource/caveat/latin-500.css";
+import "@fontsource/caveat/latin-600.css";
+import "@fontsource/oooh-baby/latin-400.css";
 import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
 import { SITE } from "@/config";
 import "@/styles/global.css";
@@ -46,6 +52,26 @@ const structuredData = {
     },
   ],
 };
+
+// 点下链接时后台预渲染目标页（conservative：仅按下/触摸时触发）
+const speculationRules = {
+  prerender: [
+    {
+      where: {
+        and: [
+          { href_matches: "/*" },
+          { not: { href_matches: "/random/*" } },
+          { not: { href_matches: "/*.xml" } },
+          { not: { href_matches: "/desk*" } },
+          { not: { href_matches: "/api/*" } },
+          { not: { href_matches: "/__auth*" } },
+          { not: { href_matches: "/__logout*" } },
+        ],
+      },
+      eagerness: "conservative",
+    },
+  ],
+};
 ---
 
 <!doctype html>
@@ -63,20 +89,8 @@ const structuredData = {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalURL} />
     <meta name="generator" content={Astro.generator} />
-
-    <Font
-      cssVariable="--font-google-sans-code"
-      preload={[{ subset: "latin", weight: 400, style: "normal" }]}
-    />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- 标题衬线（Noto Serif SC 按需分片加载）+ Letter 的手写与签名字体 -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Noto+Serif+SC:wght@500;600;700&family=Oooh+Baby&display=swap"
-      rel="stylesheet"
-    />
-
+    <Font cssVariable="--font-google-sans-code" />
+    
     <title>{title}</title>
     <meta name="title" content={title} />
     <meta name="description" content={description} />
@@ -88,36 +102,31 @@ const structuredData = {
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:image" content={socialImageURL} />
-
-    {
-      pubDatetime && (
-        <meta
-          property="article:published_time"
-          content={pubDatetime.toISOString()}
-        />
-      )
-    }
-    {
-      modDatetime && (
-        <meta
-          property="article:modified_time"
-          content={modDatetime.toISOString()}
-        />
-      )
-    }
-
+    {pubDatetime && (
+      <meta
+        property="article:published_time"
+        content={pubDatetime.toISOString()}
+      />
+    )}
+    {modDatetime && (
+      <meta
+        property="article:modified_time"
+        content={modDatetime.toISOString()}
+      />
+    )}
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content={canonicalURL} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={socialImageURL} />
 
-    <script
-      type="application/ld+json"
-      is:inline
-      set:html={JSON.stringify(structuredData)}
-    />
-
+    {pubDatetime && (
+      <script
+        type="application/ld+json"
+        is:inline
+        set:html={JSON.stringify(structuredData)}
+      />
+    )}
     <link
       rel="alternate"
       type="application/rss+xml"
@@ -127,20 +136,22 @@ const structuredData = {
 
     <meta name="theme-color" content="#f3ebdf" />
 
-    {
-      PUBLIC_GOOGLE_SITE_VERIFICATION && (
-        <meta
-          name="google-site-verification"
-          content={PUBLIC_GOOGLE_SITE_VERIFICATION}
-        />
-      )
-    }
+    {PUBLIC_GOOGLE_SITE_VERIFICATION && (
+      <meta
+        name="google-site-verification"
+        content={PUBLIC_GOOGLE_SITE_VERIFICATION}
+      />
+    )}
 
     <script is:inline>
       (function () {
         const initialColorScheme = "";
-        const currentTheme = localStorage.getItem("theme");
-
+        let currentTheme = null;
+        try {
+          currentTheme = localStorage.getItem("theme");
+        } catch {
+          /* 存储被禁用时按系统主题 */
+        }
         function getPreferTheme() {
           if (currentTheme) return currentTheme;
           if (initialColorScheme) return initialColorScheme;
@@ -148,10 +159,15 @@ const structuredData = {
             ? "dark"
             : "light";
         }
-
         const themeValue = getPreferTheme();
         document.firstElementChild?.setAttribute("data-theme", themeValue);
-
+        // 浏览器地址栏颜色首帧就跟主题一致（与 tokens.css 的 --paper 同值）
+        document
+          .querySelector("meta[name='theme-color']")
+          ?.setAttribute(
+            "content",
+            themeValue === "dark" ? "#1f1810" : "#f3ebdf"
+          );
         window.theme = {
           themeValue: themeValue,
           getTheme: () => window.theme.themeValue,
@@ -161,13 +177,18 @@ const structuredData = {
         };
       })();
     </script>
+    <!-- 点下文章链接的一瞬间（按下即开始）就在后台预渲染目标页，松手时几乎立刻打开。
+         conservative：只在按下/触摸时触发，不会因滚动误预渲染；不支持的浏览器自动忽略。 -->
+    <script
+      type="speculationrules"
+      is:inline
+      set:html={JSON.stringify(speculationRules)}
+    />
   </head>
-
   <body>
     <slot />
     <div aria-hidden="true" class="dock-spacer"></div>
     <Dock />
-
     <script>
       import "@/scripts/theme";
     </script>

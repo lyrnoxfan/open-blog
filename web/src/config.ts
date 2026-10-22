@@ -6,8 +6,8 @@ export const SITE = {
   website: "https://your-blog.example.com",
   author: "your-name",
   profile: "https://your-blog.example.com",
-  title: "My Blog",
-  desc: "一座用 Astro 搭建的个人博客。",
+  title: "My Blog · 藤笺",
+  desc: "藤花半架，闲笔数行。记技术，也记所思。",
   /** 印章上的字（页眉、签名、密码页共用的品牌记号） */
   seal: "爱",
 

@@ -16,17 +16,22 @@ export const getStaticPaths = (async ({ paginate }) => {
 
 const { page } = Astro.props;
 const title =
-  page.currentPage > 1 ? `文章 · 第 ${page.currentPage} 页` : "文章";
+  page.currentPage > 1 ? `文集 · 第 ${page.currentPage} 页` : "文集";
 ---
 
 <Layout title={`${title} | ${SITE.title}`}>
   <Header />
   <Main
-    eyebrow="Letters"
-    pageTitle="文章"
-    pageDesc={`共 ${page.total} 篇，按时间倒序。`}
+    eyebrow="卷帙"
+    pageTitle="文集"
+    pageDesc={`凡 ${page.total} 篇。`}
   >
     <PostList posts={page.data} />
     <Pagination {page} />
+    <p class="mt-6 text-center">
+      <a href="/archives/" class="text-link">
+        按年检阅书目 →
+      </a>
+    </p>
   </Main>
 </Layout>

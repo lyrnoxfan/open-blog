@@ -103,7 +103,7 @@ public class ImageCache {
             c = (HttpURLConnection) new URL(url).openConnection();
             c.setConnectTimeout(15000);
             c.setReadTimeout(30000);
-            c.setRequestProperty("User-Agent", "lyrnox-blog-apk");
+            c.setRequestProperty("User-Agent", "blog-apk");
             if (cookie != null) c.setRequestProperty("Cookie", cookie);
             int code = c.getResponseCode();
             if (code < 200 || code >= 300) return null;

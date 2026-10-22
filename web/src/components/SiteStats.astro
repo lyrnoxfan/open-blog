@@ -1,22 +1,71 @@
 ---
 import { getCollection } from "astro:content";
 import { countWords } from "@/utils/countWords";
+import postFilter from "@/utils/postFilter";
 
 type Props = { class?: string };
 const { class: className = "" } = Astro.props;
 
-// 构建时统计：每次构建（新增/更新文章后）都会重新计算
-const posts = await getCollection("blog", ({ data }) => !data.draft);
+// 构建时统计：每次构建（新增 / 更新文章后）都会重新计算
+const posts = await getCollection("blog", postFilter);
 const totalWords = posts.reduce(
   (sum, post) => sum + countWords(post.body ?? ""),
   0
 );
 ---
 
-<p id="site-stats" class:list={["text-sm text-ink-soft", className]}>
-  已写下
-  <span class="font-serif font-semibold text-seal tabular-nums"
-    >{totalWords.toLocaleString("zh-CN")}</span
-  >
-  字 · <span class="tabular-nums">{posts.length}</span> 篇
+<p id="site-stats" class:list={["site-stats", className]}>
+  凡 <b>{posts.length}</b> 篇<span class="dot" aria-hidden="true"></span>积
+  <b class="em">{totalWords.toLocaleString("zh-CN")}</b> 字
 </p>
+
+<style>
+  .site-stats {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem;
+    color: var(--ink-soft);
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    animation: stats-rise 600ms var(--ease-spring) both;
+    animation-delay: 120ms;
+  }
+  @keyframes stats-rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  .site-stats b {
+    color: var(--ink);
+    font-family: var(--ff-serif);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .site-stats b.em {
+    background: linear-gradient(
+      135deg,
+      var(--seal),
+      color-mix(in srgb, var(--wisteria) 40%, var(--seal))
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .dot {
+    width: 0.3rem;
+    height: 0.3rem;
+    margin-inline: 0.35rem;
+    border-radius: 50% 0;
+    background: linear-gradient(135deg, var(--w0), var(--w3));
+    transform: translateY(-0.15em) rotate(45deg);
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--wisteria-soft) 40%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-stats {
+      animation: none;
+    }
+  }
+</style>

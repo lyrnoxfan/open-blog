@@ -1,31 +1,14 @@
 /*
  * 正文排版（文章页 / 关于页）
- * 原则：17px 正文、1.9 行高、约 36 字一行；中文不用斜体；标题衬线、正文无衬线。
+ * 17px 正文、1.9 行高、约 36 字一行；标题衬线、正文无衬线；中文不用斜体。
  */
-
 @layer components {
   .app-prose {
-    max-width: none;
     color: var(--ink);
     font-size: 1.0625rem;
     line-height: 1.9;
     letter-spacing: 0.01em;
     overflow-wrap: break-word;
-
-    /* 交给 typography 插件的颜色也指向令牌 */
-    --tw-prose-body: var(--ink);
-    --tw-prose-headings: var(--ink);
-    --tw-prose-links: var(--wisteria);
-    --tw-prose-bold: var(--ink);
-    --tw-prose-counters: var(--ink-faint);
-    --tw-prose-bullets: var(--wisteria);
-    --tw-prose-hr: var(--rule);
-    --tw-prose-quotes: var(--ink-soft);
-    --tw-prose-quote-borders: var(--wisteria);
-    --tw-prose-captions: var(--ink-soft);
-    --tw-prose-code: var(--ink);
-    --tw-prose-th-borders: var(--rule-strong);
-    --tw-prose-td-borders: var(--rule);
 
     & > :first-child {
       margin-top: 0;
@@ -51,20 +34,20 @@
       font-size: 1.6em;
     }
     h2 {
-      position: relative;
-      margin: 2.2em 0 0.8em;
+      margin: 2.3em 0 0.85em;
       font-size: 1.35em;
     }
-    /* h2 前的小花瓣 */
+    /* h2 前一枚藤瓣 */
     h2::before {
       content: "";
       display: inline-block;
       width: 0.42em;
       height: 0.42em;
-      margin-inline-end: 0.55em;
+      margin-inline-end: 0.6em;
       border-radius: 50% 0;
-      background: var(--wisteria);
+      background: linear-gradient(135deg, var(--w0), var(--w3));
       transform: translateY(-0.18em) rotate(45deg);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--wisteria-soft) 50%, transparent);
     }
     h3 {
       margin: 1.9em 0 0.6em;
@@ -95,26 +78,39 @@
     strong {
       font-weight: 650;
     }
-
+    /* 中文伪斜体难看：改用着重号 */
     em {
-      /* 中文伪斜体很难看：改用着重号 */
       font-style: normal;
       text-emphasis: dot var(--seal);
       -webkit-text-emphasis: dot var(--seal);
       text-emphasis-position: under right;
       -webkit-text-emphasis-position: under right;
     }
-
     mark {
       background: linear-gradient(transparent 55%, var(--highlight) 55%);
       color: inherit;
       padding-inline: 0.1em;
+    }
+    kbd {
+      border: 1px solid var(--rule-strong);
+      border-bottom-width: 2px;
+      border-radius: 0.3em;
+      background: var(--surface);
+      padding: 0.05em 0.4em;
+      font-family: var(--ff-mono);
+      font-size: 0.82em;
     }
 
     ul,
     ol {
       margin-block: 1em;
       padding-inline-start: 1.4em;
+    }
+    ul {
+      list-style: disc;
+    }
+    ol {
+      list-style: decimal;
     }
     li {
       margin-block: 0.35em;
@@ -127,26 +123,44 @@
       font-family: var(--ff-serif);
       font-weight: 600;
     }
+    li > ul,
+    li > ol {
+      margin-block: 0.3em;
+    }
 
+    /* 引用：一张摘录卡 */
     blockquote {
-      margin: 1.6em 0;
+      position: relative;
+      margin: 1.75em 0;
+      border: 1px solid var(--rule);
       border-inline-start: 3px solid var(--wisteria);
       border-radius: 0 var(--radius) var(--radius) 0;
-      background: var(--wisteria-mist);
-      padding: 0.75em 1.1em;
+      background: color-mix(in srgb, var(--surface) 92%, var(--wisteria-mist));
+      padding: 0.85em 1.15em 0.85em 2.6em;
       color: var(--ink-soft);
       font-family: var(--ff-serif);
-      font-style: normal;
-      font-weight: 400;
-      line-height: 1.8;
-      quotes: none;
+      line-height: 1.85;
+      box-shadow: var(--shadow-sm);
+      transition:
+        box-shadow var(--dur) var(--ease-out),
+        transform var(--dur) var(--ease-spring);
+    }
+    blockquote:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateX(2px);
+    }
+    blockquote::before {
+      content: "\201C";
+      position: absolute;
+      top: 0.1em;
+      left: 0.35em;
+      color: color-mix(in srgb, var(--wisteria) 45%, transparent);
+      font-family: Georgia, var(--ff-serif);
+      font-size: 2.6em;
+      line-height: 1;
     }
     blockquote p {
       margin-block: 0.4em;
-    }
-    blockquote p::before,
-    blockquote p::after {
-      content: none;
     }
 
     hr {
@@ -162,17 +176,27 @@
         center / contain no-repeat;
     }
 
+    /* 图片与视频：白框照片 */
     img,
     video {
       display: block;
       max-width: 100%;
       height: auto;
       margin: 1.75em auto;
-      border: 5px solid var(--surface);
-      border-radius: var(--radius);
+      border: 6px solid var(--surface);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
       box-shadow: var(--shadow-md);
+      transition:
+        box-shadow var(--dur-slow) var(--ease-out),
+        transform var(--dur-slow) var(--ease-spring);
     }
-
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+      .app-prose img:hover {
+        box-shadow: var(--shadow-lg);
+        transform: scale(1.012);
+      }
+    }
     figure {
       margin-block: 1.75em;
     }
@@ -194,10 +218,6 @@
       font-weight: 500;
       overflow-wrap: anywhere;
     }
-    :not(pre) > code::before,
-    :not(pre) > code::after {
-      content: none;
-    }
 
     /* 代码块 */
     pre {
@@ -210,12 +230,17 @@
       line-height: 1.75;
       overflow-x: auto;
       box-shadow: var(--shadow-sm);
+      -webkit-overflow-scrolling: touch;
+      transition: box-shadow var(--dur) var(--ease-out);
+    }
+    pre:hover {
+      box-shadow: var(--shadow-md);
     }
     pre code {
       font-family: var(--ff-mono);
     }
 
-    /* 表格：窄屏可横向滚动 */
+    /* 表格：窄屏横向滚动 */
     table {
       display: block;
       width: max-content;
@@ -234,28 +259,67 @@
     }
     th {
       background: var(--paper-deep);
+      font-family: var(--ff-serif);
       font-weight: 600;
     }
+    tbody tr:nth-child(even) td {
+      background: color-mix(in srgb, var(--surface) 55%, transparent);
+    }
 
-    /* remark-collapse 生成的目录折叠块 */
+    /* remark-collapse 生成的「目录」折叠块 */
     details {
       margin-block: 1.25em;
       border: 1px dashed var(--rule-strong);
       border-radius: var(--radius);
-      padding: 0.6em 1em;
+      background: color-mix(in srgb, var(--surface) 60%, transparent);
+      padding: 0.55em 1em;
+    }
+    details[open] {
+      padding-bottom: 0.75em;
     }
     details ul {
-      margin-block: 0.4em;
+      margin-block: 0.5em 0;
     }
     summary {
+      display: flex;
+      min-height: 2.25rem;
+      align-items: center;
+      gap: 0.5em;
       color: var(--ink-soft);
       cursor: pointer;
-      font-weight: 500;
+      font-family: var(--ff-serif);
+      font-weight: 600;
+      list-style: none;
+    }
+    summary::-webkit-details-marker {
+      display: none;
+    }
+    summary::before {
+      content: "";
+      width: 0.42em;
+      height: 0.42em;
+      flex: none;
+      border-radius: 50% 0;
+      background: var(--wisteria);
+      transform: rotate(45deg);
+      transition: transform var(--dur) var(--ease-out);
+    }
+    details[open] > summary::before {
+      transform: rotate(135deg);
+    }
+
+    /* 脚注 */
+    .footnotes {
+      margin-top: 3em;
+      border-top: 1px dashed var(--rule-strong);
+      padding-top: 1em;
+      color: var(--ink-soft);
+      font-size: 0.875em;
     }
   }
 }
 
-/* ===== Shiki 代码高亮（双主题，跟随 data-theme） ===== */
+/* ===== Shiki 代码高亮（rose-pine 双主题，跟随 data-theme） ===== */
 .astro-code {
   background-color: var(--surface) !important;
   color: var(--shiki-light);
@@ -270,7 +334,6 @@ html[data-theme="dark"] .astro-code {
 html[data-theme="dark"] .astro-code span {
   color: var(--shiki-dark);
 }
-
 .astro-code .line.diff.add {
   display: inline-block;
   width: 100%;

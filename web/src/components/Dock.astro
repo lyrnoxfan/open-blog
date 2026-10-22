@@ -2,6 +2,7 @@
 /**
  * 底部 Dock：全站唯一的主导航（手机拇指可达；桌面同样适用）。
  * 下滑阅读时自动收起，上滑或停在页面底部时出现。
+ * 实色纸面，不用毛玻璃。
  */
 import IconHome from "@/assets/icons/IconHome.svg";
 import IconArchive from "@/assets/icons/IconArchive.svg";
@@ -13,51 +14,55 @@ const path = Astro.url.pathname.replace(/\/$/, "") || "/";
 const first = path.split("/")[1] ?? "";
 
 const items = [
-  { href: "/", label: "首页", icon: IconHome, active: path === "/" },
+  { href: "/", label: "卷首", icon: IconHome, active: path === "/" },
   {
     href: "/posts/",
-    label: "文章",
+    label: "文集",
     icon: IconArchive,
-    active: first === "posts",
+    active: first === "posts" || first === "archives",
   },
-  { href: "/tags/", label: "标签", icon: IconHash, active: first === "tags" },
+  { href: "/tags/", label: "类目", icon: IconHash, active: first === "tags" },
   {
     href: "/search/",
-    label: "搜索",
+    label: "寻章",
     icon: IconSearch,
     active: first === "search",
   },
 ];
-const writeActive = first === "lyrnox";
+const writeActive = first === "desk";
+// 访客分站没有写作台，不显示「执笔」
+const isGuest = process.env.GUEST_BUILD === "1";
 ---
 
 <nav id="app-dock" class="dock" aria-label="主导航">
   <ul class="dock-list">
-    {
-      items.map(item => (
+    {items.map(item => (
+      <li>
+        <a
+          href={item.href}
+          class="dock-item"
+          aria-current={item.active ? "page" : undefined}
+        >
+          <item.icon class="dock-icon" aria-hidden="true" />
+          <span>{item.label}</span>
+        </a>
+      </li>
+    ))}
+    {!isGuest && (
+      <>
+        <li class="dock-sep" aria-hidden="true"></li>
         <li>
           <a
-            href={item.href}
-            class="dock-item"
-            aria-current={item.active ? "page" : undefined}
+            href="/desk/"
+            class="dock-item dock-write"
+            aria-current={writeActive ? "page" : undefined}
           >
-            <item.icon class="dock-icon" aria-hidden="true" />
-            <span>{item.label}</span>
+            <IconPen class="dock-icon" aria-hidden="true" />
+            <span>执笔</span>
           </a>
         </li>
-      ))
-    }
-    <li class="dock-sep" aria-hidden="true"></li>
-    <li>
-      <a
-        href="/lyrnox"
-        class="dock-item dock-write"
-        aria-current={writeActive ? "page" : undefined}
-      >
-        <IconPen class="dock-icon" aria-hidden="true" />
-        <span>写文章</span>
-      </a>
-    </li>
+      </>
+    )}
   </ul>
 </nav>
 
@@ -66,8 +71,10 @@ const writeActive = first === "lyrnox";
     const dock = document.getElementById("app-dock");
     if (!dock || dock.dataset.ready) return;
     dock.dataset.ready = "1";
+
     let lastY = window.scrollY;
     let ticking = false;
+
     const update = () => {
       const y = window.scrollY;
       const nearBottom =
@@ -79,6 +86,7 @@ const writeActive = first === "lyrnox";
       lastY = y;
       ticking = false;
     };
+
     window.addEventListener(
       "scroll",
       () => {
@@ -89,6 +97,7 @@ const writeActive = first === "lyrnox";
       },
       { passive: true }
     );
+
     // 键盘聚焦到 Dock 时总是显示
     dock.addEventListener("focusin", () => delete dock.dataset.hidden);
   }
@@ -98,19 +107,29 @@ const writeActive = first === "lyrnox";
 <style>
   .dock {
     position: fixed;
-    left: 50%;
     bottom: calc(0.875rem + var(--safe-bottom));
+    left: 50%;
     z-index: 40;
     transform: translateX(-50%);
     border: 1px solid var(--rule);
     border-radius: 1.375rem;
-    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    background: var(--surface);
     box-shadow: var(--shadow-lg);
-    -webkit-backdrop-filter: blur(14px) saturate(1.2);
-    backdrop-filter: blur(14px) saturate(1.2);
     transition:
-      transform 320ms var(--ease-out),
+      transform 320ms var(--ease-spring),
       opacity 320ms var(--ease-out);
+  }
+  /* 顶边一道极细的藤色，像信封封口 */
+  .dock::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    width: 2.25rem;
+    height: 2px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--wisteria) 45%, transparent);
+    transform: translateX(-50%);
   }
   .dock[data-hidden] {
     transform: translate(-50%, calc(100% + 1.5rem));
@@ -123,33 +142,54 @@ const writeActive = first === "lyrnox";
     padding: 0.3rem;
   }
   .dock-item {
+    position: relative;
     display: flex;
     min-width: 3.5rem;
     min-height: 3.25rem;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.125rem;
+    gap: 0.15rem;
     border-radius: 1.0625rem;
     padding: 0.25rem 0.5rem;
     color: var(--ink-soft);
     font-size: 0.6875rem;
     font-weight: 500;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     transition:
       color var(--dur) ease,
-      background-color var(--dur) ease;
+      background-color var(--dur) ease,
+      transform var(--dur) var(--ease-spring);
   }
   .dock-item:hover {
     color: var(--wisteria);
+    transform: translateY(-1px);
   }
   .dock-item[aria-current="page"] {
     background: var(--wisteria-soft);
     color: var(--wisteria);
   }
+  .dock-item[aria-current="page"] .dock-icon {
+    animation: dock-bounce 240ms var(--ease-spring);
+  }
+  @keyframes dock-bounce {
+    0% {
+      transform: translateY(0);
+    }
+    45% {
+      transform: translateY(-2px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
   .dock-icon {
     width: 1.375rem;
     height: 1.375rem;
+    transition: transform var(--dur) var(--ease-spring);
+  }
+  .dock-item:hover .dock-icon {
+    transform: scale(1.08);
   }
   .dock-sep {
     width: 1px;
@@ -160,10 +200,7 @@ const writeActive = first === "lyrnox";
   .dock-write {
     color: var(--seal);
   }
-  .dock-write:hover {
-    color: var(--seal);
-    background: var(--seal-soft);
-  }
+  .dock-write:hover,
   .dock-write[aria-current="page"] {
     background: var(--seal-soft);
     color: var(--seal);
@@ -179,6 +216,11 @@ const writeActive = first === "lyrnox";
     .dock-icon {
       width: 1.125rem;
       height: 1.125rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dock-item[aria-current="page"] .dock-icon {
+      animation: none;
     }
   }
 </style>

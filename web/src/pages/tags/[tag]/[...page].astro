@@ -35,18 +35,15 @@ const { page, tagName } = Astro.props;
 <Layout title={`#${tagName} | ${SITE.title}`}>
   <Header />
   <Main
-    eyebrow="标签"
+    eyebrow="类目"
     pageTitle={`# ${tagName}`}
-    pageDesc={`「${tagName}」下共 ${page.total} 篇。`}
+    pageDesc={`凡 ${page.total} 篇。`}
   >
     <PostList posts={page.data} />
     <Pagination {page} />
-    <p class="mt-8 text-center">
-      <a
-        href="/tags/"
-        class="text-sm text-ink-soft transition-colors hover:text-wisteria"
-      >
-        ← 全部标签
+    <p class="mt-6 text-center">
+      <a href="/tags/" class="text-link">
+        ← 全部类目
       </a>
     </p>
   </Main>

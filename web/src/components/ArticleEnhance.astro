@@ -1,0 +1,80 @@
+---
+/**
+ * 正文增强：代码块一键复制 + 图片点击放大。
+ * 只作用于 #article 内的元素，不引入第三方依赖。
+ */
+---
+
+<dialog id="img-zoom" class="img-zoom" aria-label="查看大图">
+  <!-- 初始给 1x1 透明占位，避免隐藏状态下的 <img> 没有 src；打开时脚本替换 -->
+  <img
+    alt=""
+    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  />
+</dialog>
+
+<script>
+  function initCopy(root: HTMLElement) {
+    root.querySelectorAll<HTMLPreElement>("pre").forEach(pre => {
+      if (pre.parentElement?.classList.contains("code-wrap")) return;
+      const wrap = document.createElement("div");
+      wrap.className = "code-wrap";
+      pre.replaceWith(wrap);
+      wrap.appendChild(pre);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "code-copy";
+      btn.setAttribute("aria-label", "复制代码");
+      btn.innerHTML =
+        '<span class="cc-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span><span class="cc-label">复制</span>';
+      btn.addEventListener("click", async () => {
+        const code = pre.querySelector("code")?.innerText ?? pre.innerText;
+        const label = btn.querySelector(".cc-label");
+        try {
+          await navigator.clipboard.writeText(code);
+          if (label) label.textContent = "已复制";
+          btn.dataset.done = "true";
+        } catch {
+          if (label) label.textContent = "复制失败";
+        }
+        setTimeout(() => {
+          if (label) label.textContent = "复制";
+          delete btn.dataset.done;
+        }, 1600);
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function initZoom(root: HTMLElement) {
+    const dialog = document.getElementById(
+      "img-zoom"
+    ) as HTMLDialogElement | null;
+    const big = dialog?.querySelector("img");
+    if (!dialog || !big) return;
+    if (!dialog.dataset.ready) {
+      dialog.dataset.ready = "1";
+      dialog.addEventListener("click", () => dialog.close());
+    }
+    root.querySelectorAll<HTMLImageElement>("img").forEach(img => {
+      if (img.dataset.zoom || img.closest("a")) return;
+      img.dataset.zoom = "1";
+      img.addEventListener("click", () => {
+        big.src = img.currentSrc || img.src;
+        big.alt = img.alt;
+        dialog.showModal();
+      });
+    });
+  }
+
+  function initArticle() {
+    const root = document.getElementById("article");
+    if (!root) return;
+    initCopy(root);
+    initZoom(root);
+  }
+
+  initArticle();
+  document.addEventListener("astro:page-load", initArticle);
+</script>

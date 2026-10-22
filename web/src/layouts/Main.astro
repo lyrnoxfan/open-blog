@@ -1,24 +1,31 @@
 ---
 /**
- * 列表类页面（文章 / 标签 / 搜索）的统一页头与主体。
+ * 列表类页面（文集 / 类目 / 书目 / 寻章）的统一页头与主体。
+ * mark：页头右上角那个极淡的大字（如「集」「类」），只作留白里的衬底。
  */
 type Props = {
   pageTitle: string;
   pageDesc?: string;
   eyebrow?: string;
+  mark?: string;
 };
 
-const { pageTitle, pageDesc, eyebrow } = Astro.props;
+const { pageTitle, pageDesc, eyebrow, mark } = Astro.props;
 const backUrl = Astro.url.pathname;
 ---
 
 <main id="main-content" data-backurl={backUrl} class="app-layout pb-12">
   <header class="page-head rise">
+    {mark && (
+      <span class="page-mark" aria-hidden="true">
+        {mark}
+      </span>
+    )}
     {eyebrow && <p class="eyebrow">{eyebrow}</p>}
     <h1>{pageTitle}</h1>
     {pageDesc && <p class="lead">{pageDesc}</p>}
   </header>
-  <div class="rise" style="--i: 1">
+  <div class="rise rise-1">
     <slot />
   </div>
 </main>

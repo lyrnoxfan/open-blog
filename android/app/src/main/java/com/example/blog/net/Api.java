@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** 写作后台 /api/admin/articles 的原生客户端。写操作必须带 Origin + X-Lyrnox-Request 头。 */
+/** 写作后台 /api/admin/articles 的原生客户端。写操作必须带 Origin + X-Blog-Request 头。 */
 public class Api {
 
     public static class ApiException extends Exception {
@@ -43,7 +43,7 @@ public class Api {
         c.setRequestProperty("Cookie", cookie);
         if ("PUT".equals(method) || "DELETE".equals(method) || "POST".equals(method)) {
             c.setRequestProperty("Origin", Auth.SITE);
-            c.setRequestProperty("X-Lyrnox-Request", "1");
+            c.setRequestProperty("X-Blog-Request", "1");
             c.setDoOutput(true);
         }
         if ("PUT".equals(method) || "DELETE".equals(method)) {

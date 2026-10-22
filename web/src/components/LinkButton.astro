@@ -3,7 +3,15 @@ import type { HTMLAttributes } from "astro/types";
 
 type Props = { disabled?: boolean } & HTMLAttributes<"a">;
 
-const { disabled, class: className, href, ...attrs } = Astro.props;
+// aria-label 不能挂在无角色的 <span> 上（禁用态会渲染成 span）；
+// 链接本身已有可见/ sr-only 文本，名称足够。
+const {
+  disabled,
+  class: className,
+  href,
+  "aria-label": ariaLabel,
+  ...attrs
+} = Astro.props;
 ---
 
 {
@@ -12,7 +20,7 @@ const { disabled, class: className, href, ...attrs } = Astro.props;
       <slot />
     </span>
   ) : (
-    <a href={href} class={className} {...attrs}>
+    <a href={href} class={className} aria-label={ariaLabel} {...attrs}>
       <slot />
     </a>
   )

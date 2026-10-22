@@ -10,31 +10,30 @@ const posts = await getCollection("blog");
 const tags = getUniqueTags(posts);
 ---
 
-<Layout title={`标签 | ${SITE.title}`}>
+<Layout title={`类目 | ${SITE.title}`}>
   <Header />
   <Main
-    eyebrow="Tags"
-    pageTitle="标签"
-    pageDesc={`${tags.length} 个标签，点开看看同一类的文章。`}
+    eyebrow="类目"
+    pageTitle="类目"
+    pageDesc={`凡 ${tags.length} 类。`}
   >
-    {
-      tags.length > 0 ? (
-        <ul class="flex flex-wrap gap-2.5">
-          {tags.map(({ tag, tagName, count }) => (
-            <li>
-              <a
-                href={`/tags/${tag}/`}
-                class="chip min-h-9 px-3.5 text-[0.9375rem]"
-              >
-                {tagName}
-                <span class="chip-count">{count}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p class="text-ink-soft">还没有任何标签。</p>
-      )
-    }
+    {tags.length > 0 ? (
+      <ul class="catalog">
+        {tags.map(({ tag, tagName, count }) => (
+          <li>
+            <a href={`/tags/${tag}/`}>
+              <span class="name">{tagName}</span>
+              <span class="dots" aria-hidden="true" />
+              <span class="count">
+                {count}
+                <span class="sr-only"> 篇</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="text-ink-soft">尚无类目。</p>
+    )}
   </Main>
 </Layout>

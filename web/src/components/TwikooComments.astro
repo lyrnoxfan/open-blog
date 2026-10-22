@@ -1,16 +1,23 @@
 ---
-
+/**
+ * Twikoo 评论。加载逻辑（多 CDN 回退、等字段就绪再显示）保持不变；
+ * Twikoo 挂载时会把 #tcomment 整个替换成自己的 #twikoo，所以样式挂在外层 #comments-box 上，
+ * 用 id 前缀压过 Twikoo 自带样式，统一为纸面输入框、藤紫按钮，不依赖 !important。
+ */
+const isGuest = process.env.GUEST_BUILD === "1";
 ---
 
-<div id="tcomment" aria-busy="true"></div>
+<div id="comments-box" data-guest={isGuest ? "" : undefined}>
+  <div id="tcomment" aria-busy="true"></div>
+</div>
 
 <script is:inline>
   (() => {
     const CONTAINER_ID = "tcomment";
     const SCRIPT_ID = "twikoo-script";
     const STYLE_ID = "twikoo-style";
+    // 不用 cdn.staticfile.org：2024 年 polyfill.io 供应链投毒的同一运营方（Funnull）
     const TWIKOO_SRC_LIST = [
-      "https://cdn.staticfile.org/twikoo/1.6.44/twikoo.all.min.js",
       "https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.all.min.js",
       "https://unpkg.com/twikoo@1.6.44/dist/twikoo.all.min.js",
     ];
@@ -18,10 +25,14 @@
       "https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.css",
       "https://unpkg.com/twikoo@1.6.44/dist/twikoo.css",
     ];
-    const ENV_ID = "https://your-twikoo.example.com"; // 改成你自己的 Twikoo 服务地址，没有就删掉 PostDetails 里的评论组件引用
+    const SRI_JS =
+      "sha384-kwWLC0HjeZZnVPqCJ1AncI8tsk+kQqF9TbAmCclcc9Z0hGkfgHRzeQZxmdmZhE0K";
+    const SRI_CSS =
+      "sha384-NXUylKJ/zrVgNrj0+mCKxCfd0UGqmYf9cjDMDrD9+btRGO2rcadB/s2Ho1BidkHS";
+    const ENV_ID = "https://twikoo.example.com";
     const LANG = "zh-CN";
     const EMPTY_HINT_HTML =
-      '<p style="color:var(--seal);font-size:.9rem;">评论区暂时不可用，请检查 Twikoo envId 或网络连接。</p>';
+      '<p class="tk-fallback">留言板一时未能载入，请稍后再来。</p>';
 
     function loadStyle(href) {
       return new Promise((resolve, reject) => {
@@ -30,11 +41,12 @@
           resolve(existing);
           return;
         }
-
         const link = document.createElement("link");
         link.id = STYLE_ID;
         link.rel = "stylesheet";
         link.href = href;
+        link.integrity = SRI_CSS;
+        link.crossOrigin = "anonymous";
         link.dataset.astroTransitionPersist = "";
         link.onload = () => resolve(link);
         link.onerror = () => {
@@ -47,7 +59,6 @@
 
     async function ensureTwikooStyle() {
       if (document.getElementById(STYLE_ID)) return;
-
       let lastError;
       for (const href of TWIKOO_STYLE_LIST) {
         try {
@@ -57,7 +68,6 @@
           lastError = error;
         }
       }
-
       throw lastError ?? new Error("Twikoo 样式加载失败");
     }
 
@@ -67,16 +77,15 @@
           resolve(window.twikoo);
           return;
         }
-
         const previous = document.getElementById(SCRIPT_ID);
         if (previous) previous.remove();
-
         const script = document.createElement("script");
         script.id = SCRIPT_ID;
         script.src = src;
+        script.integrity = SRI_JS;
+        script.crossOrigin = "anonymous";
         script.async = true;
         script.dataset.astroTransitionPersist = "";
-
         script.onload = () => {
           if (window.twikoo?.init) {
             resolve(window.twikoo);
@@ -84,7 +93,6 @@
             reject(new Error("Twikoo 未挂载到 window"));
           }
         };
-
         script.onerror = () => reject(new Error("Twikoo 脚本加载失败"));
         document.head.appendChild(script);
       });
@@ -92,7 +100,6 @@
 
     async function loadTwikooScript() {
       if (window.twikoo?.init) return window.twikoo;
-
       let lastError;
       for (const src of TWIKOO_SRC_LIST) {
         try {
@@ -101,29 +108,32 @@
           lastError = error;
         }
       }
-
       throw lastError ?? new Error("Twikoo 加载失败");
     }
 
     async function initTwikoo() {
       const container = document.getElementById(CONTAINER_ID);
       if (!container) return;
-
       try {
         await ensureTwikooStyle();
         const twikoo = await loadTwikooScript();
-
         container.innerHTML = "";
-
         await twikoo.init({
           envId: ENV_ID,
           el: `#${CONTAINER_ID}`,
           path: location.pathname.replace(/\/$/, ""),
           lang: LANG,
         });
-
+        // Twikoo 挂载时会把 #tcomment 整个替换成 #twikoo，原 container 已脱离文档；
+        // 补名称 / 观察重绘都必须挂在稳定的外层 #comments-box 上。
+        const a11yRoot = document.getElementById("comments-box") ?? container;
+        patchA11y(a11yRoot);
+        // Twikoo 会在登录、发表、翻页时重绘输入区，重绘后补一次可访问名称
+        new MutationObserver(() => patchA11y(a11yRoot)).observe(a11yRoot, {
+          childList: true,
+          subtree: true,
+        });
         await revealWhenReady(container);
-
         window.setTimeout(() => {
           if (!container.hasChildNodes() || container.innerHTML.trim() === "") {
             container.innerHTML = EMPTY_HINT_HTML;
@@ -133,6 +143,21 @@
         container.innerHTML = EMPTY_HINT_HTML;
         reveal(container);
       }
+    }
+
+    // Twikoo 自己的输入框没有 <label>，Markdown 图标链接也没有可访问名称。
+    // 只补 aria-label / title，不改它的 DOM 结构与样式。
+    function patchA11y(root) {
+      const textarea = root.querySelector("textarea.el-textarea__inner");
+      if (textarea && !textarea.hasAttribute("aria-label")) {
+        textarea.setAttribute("aria-label", "留言内容");
+      }
+      root.querySelectorAll(".__markdown").forEach(el => {
+        if (!el.getAttribute("aria-label")) {
+          el.setAttribute("aria-label", "Markdown 语法");
+          el.setAttribute("title", "Markdown 语法");
+        }
+      });
     }
 
     function reveal(container) {
@@ -182,62 +207,228 @@
       });
     }
 
-    initTwikoo();
+    // 评论在文末：滚到附近再拉 600KB 的 Twikoo，不拖慢正文首屏
+    const box = document.getElementById(CONTAINER_ID);
+    if (box && "IntersectionObserver" in window) {
+      const io = new IntersectionObserver(
+        entries => {
+          if (!entries.some(e => e.isIntersecting)) return;
+          io.disconnect();
+          initTwikoo();
+        },
+        { rootMargin: "800px 0px" }
+      );
+      io.observe(box);
+    } else {
+      initTwikoo();
+    }
   })();
 </script>
 
 <style>
   #tcomment {
-    margin-top: 1rem;
     min-height: 1.5rem;
+    margin-top: 1rem;
+    color: var(--ink);
     opacity: 0;
     pointer-events: none;
+    transition: opacity 240ms ease;
   }
-
   #tcomment.twikoo-ready {
     opacity: 1;
     pointer-events: auto;
   }
+  #comments-box :global(.tk-fallback) {
+    color: var(--seal);
+    font-size: 0.9rem;
+  }
 
-  /* Twikoo 跟随站点令牌：纸面输入框、藤色强调 */
-  #tcomment :global(.tk-input),
-  #tcomment :global(.tk-textarea),
-  #tcomment :global(.el-input__inner),
-  #tcomment :global(.el-textarea__inner) {
-    border-color: var(--rule-strong) !important;
-    border-radius: var(--radius) !important;
-    background-color: var(--surface) !important;
-    color: var(--ink) !important;
+  /* —— 输入区：一张信笺 —— */
+  #comments-box :global(.tk-submit) {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
   }
-  #tcomment :global(.el-input__inner:focus),
-  #tcomment :global(.el-textarea__inner:focus) {
-    border-color: var(--wisteria) !important;
-    box-shadow: 0 0 0 4px var(--wisteria-soft) !important;
-  }
-  #tcomment :global(.tk-submit .el-button--primary),
-  #tcomment :global(.el-button--primary) {
-    border-color: var(--wisteria) !important;
-    border-radius: 999px !important;
-    background-color: var(--wisteria) !important;
-    color: var(--paper) !important;
-  }
-  #tcomment :global(.el-button--primary.is-disabled) {
-    opacity: 0.45;
-  }
-  #tcomment :global(.tk-avatar) {
-    border-radius: 999px !important;
-  }
-  #tcomment :global(.tk-comments-title),
-  #tcomment :global(.tk-content),
-  #tcomment :global(.tk-nick) {
+  #comments-box :global(.el-input__inner),
+  #comments-box :global(.el-textarea__inner) {
+    border-color: var(--rule-strong);
+    border-radius: var(--radius);
+    background-color: var(--paper);
     color: var(--ink);
+    font-family: var(--ff-sans);
   }
-  #tcomment :global(.tk-time),
-  #tcomment :global(.tk-extras),
-  #tcomment :global(.tk-footer) {
+  #comments-box :global(.el-textarea__inner) {
+    min-height: 7rem;
+    padding: 0.75rem 0.9rem;
+    line-height: 1.8;
+  }
+  #comments-box :global(.el-input__inner::placeholder),
+  #comments-box :global(.el-textarea__inner::placeholder) {
     color: var(--ink-faint);
   }
-  #tcomment :global(a) {
-    color: var(--wisteria) !important;
+  #comments-box :global(.el-input__inner:focus),
+  #comments-box :global(.el-textarea__inner:focus) {
+    border-color: var(--wisteria);
+    outline: none;
+    box-shadow: 0 0 0 4px var(--wisteria-soft);
+  }
+  #comments-box :global(.el-input-group__prepend) {
+    border-color: var(--rule-strong);
+    background: var(--paper-deep);
+    color: var(--ink-soft);
+  }
+  #comments-box :global(.el-input-group--prepend .el-input__inner) {
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  #comments-box :global(.el-input-group__prepend) {
+    border-radius: var(--radius) 0 0 var(--radius);
+  }
+  #comments-box :global(.el-input__count) {
+    background: transparent;
+    color: var(--ink-faint);
+  }
+
+  /* —— 按钮 —— */
+  #comments-box :global(.el-button) {
+    min-height: 2.25rem;
+    border-color: var(--rule-strong);
+    border-radius: 999px;
+    background: var(--surface);
+    padding-inline: 1.1rem;
+    color: var(--ink);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+  #comments-box :global(.el-button:hover),
+  #comments-box :global(.el-button:focus) {
+    border-color: var(--wisteria);
+    background: var(--surface);
+    color: var(--wisteria);
+  }
+  #comments-box :global(.el-button--primary) {
+    border-color: var(--wisteria);
+    background: var(--wisteria);
+    color: var(--paper);
+  }
+  #comments-box :global(.el-button--primary:hover),
+  #comments-box :global(.el-button--primary:focus) {
+    border-color: var(--wisteria-deep);
+    background: var(--wisteria-deep);
+    color: var(--paper);
+  }
+  #comments-box :global(.el-button--primary.is-disabled),
+  #comments-box :global(.el-button--primary.is-disabled:hover) {
+    border-color: var(--wisteria);
+    background: var(--wisteria);
+    color: var(--paper);
+    opacity: 0.45;
+  }
+
+  /* —— 图标与小字 —— */
+  #comments-box :global(.tk-action-icon),
+  #comments-box :global(.tk-comments-title .tk-icon),
+  #comments-box :global(.tk-action-link) {
+    color: var(--ink-faint);
+  }
+  #comments-box :global(.tk-action-icon svg),
+  #comments-box :global(.tk-icon svg) {
+    fill: currentColor;
+  }
+  #comments-box :global(.tk-action-icon:hover),
+  #comments-box :global(.tk-action-link:hover),
+  #comments-box :global(.tk-comments-title .tk-icon:hover) {
+    color: var(--wisteria);
+  }
+  #comments-box :global(.tk-comments-title) {
+    margin-top: 1.75rem;
+    color: var(--ink);
+    font-family: var(--ff-serif);
+    font-weight: 600;
+  }
+  #comments-box :global(.tk-comments-count) {
+    color: var(--ink-soft);
+  }
+  #comments-box :global(.tk-comments-no) {
+    padding-block: 1.5rem;
+    color: var(--ink-faint);
+    font-family: var(--ff-serif);
+    letter-spacing: 0.08em;
+  }
+
+  /* —— 评论条目 —— */
+  #comments-box :global(.tk-comment) {
+    margin-top: 1.25rem;
+  }
+  #comments-box :global(.tk-avatar) {
+    border-radius: 999px;
+    background: var(--wisteria-soft);
+  }
+  #comments-box :global(.tk-nick),
+  #comments-box :global(.tk-nick-link) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  #comments-box :global(.tk-tag) {
+    border-color: var(--seal);
+    background: transparent;
+    color: var(--seal);
+  }
+  #comments-box :global(.tk-time),
+  #comments-box :global(.tk-extras),
+  #comments-box :global(.tk-footer) {
+    color: var(--ink-faint);
+  }
+  #comments-box :global(.tk-content) {
+    color: var(--ink);
+    line-height: 1.85;
+  }
+  #comments-box :global(.tk-replies) {
+    border-inline-start: 2px solid var(--wisteria-soft);
+    padding-inline-start: 0.75rem;
+  }
+  #comments-box :global(.tk-content a),
+  #comments-box :global(.tk-expand),
+  #comments-box :global(.tk-footer a) {
+    color: var(--wisteria);
+  }
+  #comments-box :global(.tk-footer) {
+    margin-top: 2rem;
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  /* 表情按钮、Markdown 标记、默认头像 */
+  #comments-box :global(.OwO .OwO-logo),
+  #comments-box :global(.tk-row-actions-start .tk-action-icon) {
+    color: var(--ink-soft);
+  }
+  #comments-box :global(.OwO .OwO-logo svg),
+  #comments-box :global(.tk-row-actions-start svg) {
+    fill: currentColor;
+  }
+  #comments-box :global(.OwO .OwO-logo:hover),
+  #comments-box :global(.tk-row-actions-start .tk-action-icon:hover) {
+    color: var(--wisteria);
+  }
+  #comments-box :global(.tk-avatar-img) {
+    color: var(--w3);
+  }
+  #comments-box :global(.tk-avatar-img svg) {
+    fill: currentColor;
+  }
+
+  /* 访客分站：即使昵称填博主名，也不露出评论管理齿轮和管理面板 */
+  #comments-box[data-guest] :global(.tk-comments-title .tk-icon:has(path[d^="M487.4"])),
+  #comments-box[data-guest] :global(.tk-admin-container) {
+    display: none !important;
+  }
+
+  /* —— 表情面板 —— */
+  #comments-box :global(.OwO .OwO-body) {
+    border-color: var(--rule);
+    background: var(--surface);
+    color: var(--ink);
   }
 </style>

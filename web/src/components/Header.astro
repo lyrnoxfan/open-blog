@@ -13,57 +13,130 @@ const aboutActive = pathname.replace(/\/$/, "") === "/about";
   href="#main-content"
   class="fixed start-4 -top-full z-[60] rounded-full bg-surface px-4 py-2 text-wisteria shadow-[var(--shadow-md)] focus:top-4"
 >
-  跳转到内容
+  径至正文
 </a>
-
-<header class="relative z-10 app-layout">
-  <div class="flex items-center justify-between gap-4 py-4 sm:py-6">
+<header class="site-head app-layout">
+  <a href="/" class="brand" aria-label={`${SITE.seal} · ${SITE.title}，返回首页`}>
+    <span class="seal">{SITE.seal}</span>
+    <span class="brand-name">
+      My Blog<span class="brand-sub"> · 藤笺</span>
+    </span>
+  </a>
+  <nav aria-label="站点" class="site-nav">
     <a
-      href="/"
-      class="group flex min-h-11 items-center gap-2.5 rounded-lg"
-      aria-label={`${SITE.title}，返回首页`}
+      href="/about/"
+      class:list={["site-link", { "is-on": aboutActive }]}
+      aria-current={aboutActive ? "page" : undefined}
     >
-      <span class="seal transition-transform duration-300 group-hover:rotate-0">
-        {SITE.seal}
-      </span>
-      <span class="font-serif text-lg font-semibold tracking-wide text-ink">
-        lyrnox<span class="font-normal text-ink-soft">'s blog</span>
-      </span>
+      关于
     </a>
-
-    <nav aria-label="站点" class="flex items-center gap-1 text-[0.9375rem]">
-      <a
-        href="/about/"
-        class:list={[
-          "inline-flex min-h-11 items-center rounded-full px-3 transition-colors",
-          aboutActive ? "text-wisteria" : "text-ink-soft hover:text-wisteria",
-        ]}
-        aria-current={aboutActive ? "page" : undefined}
+    <a href="/rss.xml" class="site-icon site-rss" title="订阅">
+      <IconRss class="size-5" aria-hidden="true" />
+      <span class="sr-only">订阅</span>
+    </a>
+    {SITE.lightAndDarkMode && (
+      <button
+        type="button"
+        id="theme-btn"
+        class="site-icon relative"
+        title="昼夜互换"
+        aria-label="切换昼夜模式"
+        aria-live="polite"
       >
-        关于
-      </a>
-      <a
-        href="/rss.xml"
-        class="hidden size-11 items-center justify-center rounded-full text-ink-soft transition-colors hover:text-wisteria sm:inline-flex"
-        title="RSS 订阅"
-      >
-        <IconRss class="size-5" aria-hidden="true" />
-        <span class="sr-only">RSS 订阅</span>
-      </a>
-      {
-        SITE.lightAndDarkMode && (
-          <button
-            id="theme-btn"
-            class="relative inline-flex size-11 items-center justify-center rounded-full text-ink-soft transition-colors hover:text-wisteria"
-            title="切换浅色 / 深色"
-            aria-label="auto"
-            aria-live="polite"
-          >
-            <IconMoon class="absolute size-5 scale-100 rotate-0 transition-transform duration-300 dark:scale-0 dark:-rotate-90" />
-            <IconSunHigh class="absolute size-5 scale-0 rotate-90 transition-transform duration-300 dark:scale-100 dark:rotate-0" />
-          </button>
-        )
-      }
-    </nav>
-  </div>
+        <IconMoon class="absolute size-5 scale-100 rotate-0 transition-transform duration-300 dark:scale-0 dark:-rotate-90" />
+        <IconSunHigh class="absolute size-5 scale-0 rotate-90 transition-transform duration-300 dark:scale-100 dark:rotate-0" />
+      </button>
+    )}
+  </nav>
 </header>
+
+<style>
+  .site-head {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1rem;
+  }
+  @media (width >= 640px) {
+    .site-head {
+      padding-block: 1.5rem;
+    }
+  }
+  .brand {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: 0.65rem;
+    border-radius: 0.5rem;
+  }
+  .brand .seal {
+    transform-origin: 70% 70%;
+    transition: transform 300ms var(--ease-out);
+  }
+  .brand:hover .seal {
+    transform: rotate(0deg) scale(1.06);
+  }
+  .brand-name {
+    color: var(--ink);
+    font-family: var(--ff-serif);
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .brand-sub {
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.9375rem;
+  }
+  .site-link {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    border-radius: 999px;
+    padding-inline: 0.85rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    transition:
+      color var(--dur) ease,
+      background-color var(--dur) ease;
+  }
+  .site-link:hover,
+  .site-link.is-on {
+    color: var(--wisteria);
+  }
+  .site-link.is-on {
+    background: var(--wisteria-soft);
+  }
+  .site-icon {
+    display: inline-flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: var(--ink-soft);
+    transition:
+      color var(--dur) ease,
+      background-color var(--dur) ease;
+  }
+  .site-icon:hover {
+    background: var(--paper-deep);
+    color: var(--wisteria);
+  }
+  .site-rss {
+    display: none;
+  }
+  @media (width >= 640px) {
+    .site-rss {
+      display: inline-flex;
+    }
+  }
+</style>
