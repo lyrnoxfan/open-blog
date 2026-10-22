@@ -1,0 +1,59 @@
+---
+import { getCollection } from "astro:content";
+import Main from "@/layouts/Main.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import getSortedPosts from "@/utils/getSortedPosts";
+import { getPath } from "@/utils/getPath";
+import { toZoned } from "@/utils/date";
+import { SITE } from "@/config";
+
+const posts = getSortedPosts(
+  await getCollection("blog", ({ data }) => !data.draft)
+);
+
+const groups = new Map<string, typeof posts>();
+for (const post of posts) {
+  const year = toZoned(post.data.pubDatetime, post.data.timezone).format(
+    "YYYY"
+  );
+  if (!groups.has(year)) groups.set(year, []);
+  groups.get(year)!.push(post);
+}
+---
+
+<Layout title={`书目 | ${SITE.title}`}>
+  <Header />
+  <Main
+    eyebrow="书目"
+    pageTitle="书目"
+    pageDesc={`凡 ${posts.length} 篇，以年系之。`}
+  >
+    {[...groups].map(([year, list]) => (
+      <section class="archive-year" aria-labelledby={`y-${year}`}>
+        <h2 id={`y-${year}`} class="archive-year-title">
+          {year}
+          <span class="n">{list.length} 篇</span>
+        </h2>
+        <ol class="archive-list">
+          {list.map(post => {
+            const d = toZoned(post.data.pubDatetime, post.data.timezone);
+            return (
+              <li>
+                <a href={getPath(post.id, post.filePath)}>
+                  <time datetime={d.toISOString()}>{d.format("MM-DD")}</time>
+                  <span class="t">{post.data.title}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+    ))}
+    <p class="mt-10">
+      <a href="/posts/" class="text-link">
+        ← 回文集
+      </a>
+    </p>
+  </Main>
+</Layout>

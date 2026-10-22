@@ -1,0 +1,37 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import Main from "@/layouts/Main.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import PostList from "@/components/PostList.astro";
+import Pagination from "@/components/Pagination.astro";
+import getSortedPosts from "@/utils/getSortedPosts";
+import { SITE } from "@/config";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return paginate(getSortedPosts(posts), { pageSize: SITE.postPerPage });
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+const title =
+  page.currentPage > 1 ? `文集 · 第 ${page.currentPage} 页` : "文集";
+---
+
+<Layout title={`${title} | ${SITE.title}`}>
+  <Header />
+  <Main
+    eyebrow="卷帙"
+    pageTitle="文集"
+    pageDesc={`凡 ${page.total} 篇。`}
+  >
+    <PostList posts={page.data} />
+    <Pagination {page} />
+    <p class="mt-6 text-center">
+      <a href="/archives/" class="text-link">
+        按年检阅书目 →
+      </a>
+    </p>
+  </Main>
+</Layout>

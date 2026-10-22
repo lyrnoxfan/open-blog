@@ -1,0 +1,37 @@
+---
+import type { MarkdownLayoutProps } from "astro";
+import Header from "@/components/Header.astro";
+import Layout from "./Layout.astro";
+import { SITE } from "@/config";
+
+type Props = MarkdownLayoutProps<{ title: string; description?: string }>;
+
+const { frontmatter } = Astro.props;
+---
+
+<Layout
+  title={`${frontmatter.title} | ${SITE.title}`}
+  description={frontmatter.description}
+>
+  <Header />
+  <main id="main-content" class="app-layout">
+    <header class="page-head rise">
+      <span class="page-mark" aria-hidden="true">
+        我
+      </span>
+      <p class="eyebrow">自述</p>
+      <h1>{frontmatter.title}</h1>
+      {frontmatter.description && <p class="lead">{frontmatter.description}</p>}
+    </header>
+    <section id="about" class="app-prose rise rise-1">
+      <slot />
+    </section>
+    <hr class="wavy" />
+    <p class="signature mb-12">
+      — {SITE.author}
+      <span class="seal seal-outline text-sm" aria-hidden="true">
+        {SITE.seal}
+      </span>
+    </p>
+  </main>
+</Layout>

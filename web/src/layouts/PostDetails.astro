@@ -1,0 +1,272 @@
+---
+import { render, type CollectionEntry } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Datetime from "@/components/Datetime.astro";
+import EditPost from "@/components/EditPost.astro";
+import BackButton from "@/components/BackButton.astro";
+import BackToTopButton from "@/components/BackToTopButton.astro";
+import ReadingProgress from "@/components/ReadingProgress.astro";
+import PostToc from "@/components/PostToc.astro";
+import ArticleEnhance from "@/components/ArticleEnhance.astro";
+import { getPath } from "@/utils/getPath";
+import { slugifyStr } from "@/utils/slugify";
+import { displayTag } from "@/utils/displayTag";
+import { countWords } from "@/utils/countWords";
+import { readingTime } from "@/utils/readingTime";
+import { transitionName } from "@/utils/date";
+import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
+import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
+import { SITE } from "@/config";
+
+type Props = {
+  post: CollectionEntry<"blog">;
+  posts: CollectionEntry<"blog">[];
+};
+
+const { post, posts } = Astro.props;
+
+const {
+  title,
+  author,
+  description,
+  ogImage: initOgImage,
+  canonicalURL,
+  pubDatetime,
+  modDatetime,
+  timezone,
+  hideEditPost,
+  tags,
+} = post.data;
+
+const { Content, headings } = await render(post);
+
+let ogImageUrl: string | undefined;
+if (typeof initOgImage === "string") {
+  ogImageUrl = initOgImage;
+} else if (initOgImage?.src) {
+  ogImageUrl = initOgImage.src;
+}
+if (!ogImageUrl && SITE.dynamicOgImage) {
+  ogImageUrl = `${getPath(post.id, post.filePath)}index.png`;
+}
+const ogImage = ogImageUrl
+  ? new URL(ogImageUrl, Astro.url.origin).href
+  : undefined;
+
+const layoutProps = {
+  title: `${title} | ${SITE.title}`,
+  author,
+  description,
+  pubDatetime,
+  modDatetime,
+  canonicalURL,
+  ogImage,
+  scrollSmooth: true,
+};
+
+// posts 已按时间倒序：前一项更新，后一项更早
+const index = posts.findIndex(p => p.id === post.id);
+const newer = index > 0 ? posts[index - 1] : undefined;
+const older =
+  index >= 0 && index < posts.length - 1 ? posts[index + 1] : undefined;
+
+// 相关篇章：按共同标签数排序，取前 3 篇（排除相邻的前篇 / 后篇以免重复）
+const ownTags = new Set((tags ?? []).map(t => slugifyStr(t)));
+const related = ownTags.size
+  ? posts
+      .filter(p => p.id !== post.id && p.id !== newer?.id && p.id !== older?.id)
+      .map(p => ({
+        p,
+        score: (p.data.tags ?? []).filter(t => ownTags.has(slugifyStr(t)))
+          .length,
+      }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(r => r.p)
+  : [];
+
+const wordCount = countWords(post.body ?? "");
+const minutes = readingTime(post.body ?? "");
+---
+
+<Layout {...layoutProps}>
+  <ReadingProgress />
+  <Header />
+  <BackButton />
+  <main id="main-content" class="app-layout pb-12" data-pagefind-body>
+    <header class="post-head rise">
+      <p class="post-meta" data-pagefind-ignore>
+        <Datetime {pubDatetime} {timezone} />
+        <span class="sep" aria-hidden="true"></span>
+        <span class="tabular-nums">{wordCount.toLocaleString("zh-CN")} 字</span>
+        <span class="sep" aria-hidden="true"></span>
+        <span>约 {minutes} 分钟</span>
+      </p>
+      <h1
+        class="post-h1"
+        style={{ viewTransitionName: transitionName(post.id) }}
+      >
+        {title}
+      </h1>
+      {description && <p class="post-lede">{description}</p>}
+      {tags && tags.length > 0 && (
+        <ul class="post-chips" data-pagefind-ignore>
+          {tags.map(tag => (
+            <li>
+              <a href={`/tags/${slugifyStr(tag)}/`} class="chip">
+                {displayTag(tag)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </header>
+
+    <hr class="wavy my-8" />
+
+    <article id="article" class="app-prose rise rise-1">
+      <Content />
+    </article>
+
+    <div class="post-sign" data-pagefind-ignore>
+      <EditPost {hideEditPost} {post} class="text-sm" />
+      <span class="signature">
+        — {SITE.author}
+        <span class="seal seal-outline text-sm" aria-hidden="true">
+          {SITE.seal}
+        </span>
+      </span>
+    </div>
+
+    <hr class="wavy" />
+
+    {related.length > 0 && (
+      <section
+        class="mb-9"
+        aria-labelledby="related-title"
+        data-pagefind-ignore
+      >
+        <h2 id="related-title" class="eyebrow">
+          相关篇章
+        </h2>
+        <ul class="related-list">
+          {related.map(p => (
+            <li>
+              <a href={getPath(p.id, p.filePath)}>{p.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <p class="read-again" data-pagefind-ignore>
+      <a href="/random/" class="text-link">
+        再读一封
+        <IconChevronRight class="rtl:rotate-180" aria-hidden="true" />
+      </a>
+    </p>
+
+    {(newer || older) && (
+      <nav aria-label="前后篇" class="pager" data-pagefind-ignore>
+        {newer && (
+          <a href={getPath(newer.id, newer.filePath)}>
+            <span class="k">
+              <IconChevronLeft class="rtl:rotate-180" aria-hidden="true" />
+              前篇
+            </span>
+            <span class="t">{newer.data.title}</span>
+          </a>
+        )}
+        {older && (
+          <a href={getPath(older.id, older.filePath)} class="older">
+            <span class="k">
+              后篇
+              <IconChevronRight class="rtl:rotate-180" aria-hidden="true" />
+            </span>
+            <span class="t">{older.data.title}</span>
+          </a>
+        )}
+      </nav>
+    )}
+
+    <section
+      class="mt-14"
+      aria-labelledby="comments-title"
+      data-pagefind-ignore
+    >
+      <h2 id="comments-title" class="eyebrow">
+        留言
+      </h2>
+      <!-- 评论区（TwikooComments）由文章路由放进这个插槽 -->
+      <slot />
+    </section>
+  </main>
+  <PostToc {headings} />
+  <ArticleEnhance />
+  <BackToTopButton />
+</Layout>
+
+<style>
+  .post-head {
+    padding-block: 1rem 0.5rem;
+  }
+  .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.6rem;
+    color: var(--ink-soft);
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+  }
+  .post-meta .sep {
+    width: 0.3rem;
+    height: 0.3rem;
+    border-radius: 50% 0;
+    background: var(--w2);
+    transform: rotate(45deg);
+  }
+  .post-h1 {
+    margin-top: 0.85rem;
+    color: var(--ink);
+    font-size: clamp(1.875rem, 1.55rem + 1.5vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0.02em;
+  }
+  /* 题记：左侧一道藤色细线 */
+  .post-lede {
+    margin-top: 1.1rem;
+    border-inline-start: 2px solid var(--wisteria-soft);
+    padding-inline-start: 0.9rem;
+    color: var(--ink-soft);
+    font-family: var(--ff-serif);
+    font-size: 1.0625rem;
+    line-height: 1.8;
+  }
+  .post-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+  .post-sign {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 3rem;
+  }
+  .post-sign .signature {
+    margin-inline-start: auto;
+    font-size: 1.875rem;
+  }
+  .read-again {
+    margin: 1.5rem 0 2rem;
+    text-align: center;
+    font-size: 0.9375rem;
+  }
+</style>

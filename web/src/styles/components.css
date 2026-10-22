@@ -1,0 +1,990 @@
+/* ================================================================
+ * 通用组件
+ * ================================================================ */
+@layer components {
+  /* —— 眉题：一枚藤瓣 + 小字 —— */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--ink-soft);
+    font-size: 0.8125rem;
+    letter-spacing: 0.16em;
+  }
+  .eyebrow::before {
+    content: "";
+    flex: none;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50% 0;
+    background: linear-gradient(135deg, var(--w0), var(--w3));
+    transform: rotate(45deg);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--wisteria-soft) 60%, transparent);
+  }
+
+  /* —— 页头：标题 + 一个极淡的大字作衬（留白里的「一枝」） —— */
+  .page-head {
+    position: relative;
+    isolation: isolate;
+    padding-block: 1.5rem 1.75rem;
+  }
+  .page-head h1 {
+    margin-top: 0.5rem;
+    font-size: clamp(1.875rem, 1.5rem + 1.6vw, 2.375rem);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+  }
+  .page-head .lead {
+    margin-top: 0.5rem;
+    color: var(--ink-soft);
+    font-family: var(--ff-serif);
+    font-size: 0.9375rem;
+    letter-spacing: 0.04em;
+  }
+  .page-mark {
+    position: absolute;
+    top: -0.75rem;
+    right: -0.25rem;
+    z-index: -1;
+    color: color-mix(in srgb, var(--wisteria) 11%, transparent);
+    font-family: var(--ff-serif);
+    font-size: clamp(6.5rem, 5rem + 8vw, 9.5rem);
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* —— 印章 —— */
+  .seal {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.3rem;
+    background: var(--seal);
+    color: var(--paper);
+    font-family: var(--ff-serif);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow:
+      inset 0 0 0 2px color-mix(in srgb, var(--paper) 35%, transparent),
+      0 1px 2px rgb(161 63 4 / 18%);
+    transform: rotate(-4deg);
+  }
+  .seal-outline {
+    background: transparent;
+    color: var(--seal);
+    box-shadow: inset 0 0 0 1.5px var(--seal);
+  }
+  /* 竖排小印（信笺右上角的「新笺」「置顶」） */
+  .seal-v {
+    width: auto;
+    height: auto;
+    padding: 0.4rem 0.22rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    writing-mode: vertical-rl;
+  }
+
+  /* —— 荧光笔 —— */
+  .hl {
+    background: linear-gradient(
+      transparent 58%,
+      var(--highlight) 58%,
+      var(--highlight) 92%,
+      transparent 92%
+    );
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  /* —— 波浪分隔：用 mask 画，颜色跟随主题 —— */
+  .wavy {
+    display: block;
+    width: 168px;
+    height: 14px;
+    margin: 2.75rem auto;
+    border: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--ink-faint) 25%,
+      color-mix(in srgb, var(--wisteria) 35%, var(--ink-faint)) 50%,
+      var(--ink-faint) 75%,
+      transparent
+    );
+    opacity: 0.7;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='168' height='14' viewBox='0 0 168 14'%3E%3Cpath d='M2 7q10.25-6 20.5 0t20.5 0 20.5 0 20.5 0 20.5 0 20.5 0 20.5 0 20.5 0' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='168' height='14' viewBox='0 0 168 14'%3E%3Cpath d='M2 7q10.25-6 20.5 0t20.5 0 20.5 0 20.5 0 20.5 0 20.5 0 20.5 0 20.5 0' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+  }
+
+  /* —— 信纸抬头：手写西文日期 + 农历小字 —— */
+  .dateline {
+    color: var(--ink-soft);
+    font-family: var(--ff-hand);
+    font-size: 1.5rem;
+    line-height: 1.15;
+  }
+  .lunar {
+    margin-top: 0.25rem;
+    /* 与纸底对比度需 ≥4.5:1（axe）；仍比正文浅，保持次级层级 */
+    color: var(--ink-soft);
+    font-family: var(--ff-serif);
+    font-size: 0.8125rem;
+    letter-spacing: 0.24em;
+    /* 农历由脚本在首帧后填入：先占住一行，避免标题与信笺整体下跳（CLS） */
+    min-height: 1lh;
+  }
+
+  /* —— 落款 —— */
+  .signature {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: var(--seal);
+    font-family: var(--ff-sig);
+    font-size: 2.25rem;
+    line-height: 1;
+    text-shadow: 0 1px 0 color-mix(in srgb, var(--seal) 14%, transparent);
+  }
+
+  /* —— 信笺卡：胶带 + 双线朱丝栏 + 竖排小印 —— */
+  .jian {
+    position: relative;
+    display: block;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    padding: 1.75rem 1.5rem 1.375rem;
+    box-shadow: var(--shadow-md);
+    transition:
+      transform var(--dur-slow) var(--ease-spring),
+      box-shadow var(--dur) var(--ease-out),
+      border-color var(--dur) ease;
+  }
+  .jian::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: calc(var(--radius-lg) - 5px);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--seal) 24%, transparent),
+      inset 0 0 0 4px var(--surface),
+      inset 0 0 0 5px color-mix(in srgb, var(--seal) 10%, transparent);
+    pointer-events: none;
+  }
+  .jian::after {
+    content: "";
+    position: absolute;
+    top: -0.65rem;
+    left: 50%;
+    width: 5.5rem;
+    height: 1.3rem;
+    border-radius: 2px;
+    background: var(--tape);
+    box-shadow:
+      0 1px 2px rgb(111 101 85 / 15%),
+      inset 0 -1px 1px rgb(255 255 255 / 18%);
+    transform: translateX(-50%) rotate(-2.5deg);
+    transition: transform var(--dur-slow) var(--ease-spring);
+  }
+  a.jian:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: color-mix(in srgb, var(--wisteria) 30%, var(--rule));
+  }
+  a.jian:hover::after {
+    transform: translateX(-50%) rotate(-4deg) translateY(-1px);
+  }
+  .jian > .seal {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+  }
+  .jian-kicker {
+    color: var(--seal);
+    font-family: var(--ff-hand);
+    font-size: 1.375rem;
+    line-height: 1;
+  }
+  .jian-title {
+    margin-top: 0.6rem;
+    padding-inline-end: 2rem;
+    color: var(--ink);
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+    transition: color var(--dur) ease;
+  }
+  a.jian:hover .jian-title {
+    color: var(--wisteria);
+  }
+  .jian-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    color: var(--ink-soft);
+    font-size: 0.9375rem;
+    line-height: 1.8;
+  }
+  .jian-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.1rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--rule-strong);
+    /* 13px 次级文字：--ink-faint 在浅色纸底只有 3.77:1，改用 --ink-soft */
+    color: var(--ink-soft);
+    font-size: 0.8125rem;
+  }
+  .jian-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--wisteria);
+    font-weight: 500;
+  }
+  .jian-go svg {
+    width: 1rem;
+    height: 1rem;
+    transition: transform var(--dur) var(--ease-spring);
+  }
+  a.jian:hover .jian-go svg {
+    transform: translateX(4px);
+  }
+  @media (width >= 640px) {
+    .jian {
+      padding: 2rem 2rem 1.5rem;
+    }
+    .jian-title {
+      font-size: 1.625rem;
+    }
+  }
+
+  /* —— 标签胶囊 —— */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    padding: 0.15rem 0.8rem;
+    color: var(--ink-soft);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    transition:
+      color var(--dur) ease,
+      border-color var(--dur) ease,
+      background-color var(--dur) ease,
+      transform var(--dur) var(--ease-spring);
+  }
+  .chip::before {
+    content: "#";
+    color: var(--wisteria);
+    opacity: 0.8;
+    transition: opacity var(--dur) ease;
+  }
+  a.chip:hover {
+    border-color: var(--wisteria);
+    background: var(--wisteria-mist);
+    color: var(--wisteria);
+    transform: translateY(-1px);
+  }
+  a.chip:hover::before {
+    opacity: 1;
+  }
+
+  /* —— 按钮 —— */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--surface);
+    padding: 0.5rem 1.25rem;
+    color: var(--ink);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    box-shadow: var(--shadow-sm);
+    transition:
+      color var(--dur) ease,
+      border-color var(--dur) ease,
+      background-color var(--dur) ease,
+      box-shadow var(--dur) var(--ease-out),
+      transform var(--dur) var(--ease-spring);
+  }
+  .btn:hover {
+    border-color: var(--wisteria);
+    color: var(--wisteria);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn[aria-disabled="true"] {
+    pointer-events: none;
+    opacity: 0.4;
+    box-shadow: none;
+  }
+  .btn svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  .btn-primary {
+    border-color: var(--wisteria);
+    background: var(--wisteria);
+    color: var(--paper);
+  }
+  .btn-primary:hover {
+    background: var(--wisteria-deep);
+    color: var(--paper);
+  }
+
+  /* —— 文字链（「览全部」「回文集」等） —— */
+  .text-link {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--ink-soft);
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    transition: color var(--dur) ease;
+  }
+  .text-link:hover {
+    color: var(--wisteria);
+  }
+
+  /* —— 区块标题 —— */
+  .section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* —— 文章列表条目 —— */
+  .post-item + .post-item {
+    border-top: 1px dashed var(--rule-strong);
+  }
+  .post-item > a {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 1rem;
+    margin-inline: -0.75rem;
+    border-radius: var(--radius);
+    padding: 1.125rem 0.75rem;
+    transition: background-color var(--dur) ease;
+  }
+  .post-item > a::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 0;
+    border-radius: 2px;
+    background: var(--wisteria);
+    transform: translateY(-50%);
+    transition: height var(--dur) var(--ease-spring);
+  }
+  .post-item > a:hover {
+    background: color-mix(in srgb, var(--wisteria-mist) 75%, transparent);
+  }
+  .post-item > a:hover::before {
+    height: 60%;
+  }
+  .post-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 0.15rem;
+    font-family: var(--ff-serif);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .post-date .d {
+    color: var(--ink);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  .post-date .m {
+    margin-top: 0.3rem;
+    color: var(--ink-soft);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+  .post-title {
+    color: var(--ink);
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    transition: color var(--dur) ease;
+  }
+  .post-item > a:hover .post-title {
+    color: var(--wisteria);
+  }
+  .post-pin {
+    display: inline-block;
+    margin-inline-end: 0.4rem;
+    border: 1px solid currentColor;
+    border-radius: 0.25rem;
+    padding: 0 0.3rem;
+    color: var(--seal);
+    font-family: var(--ff-sans);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    vertical-align: 0.2em;
+  }
+  .post-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    margin-top: 0.3rem;
+    overflow: hidden;
+    color: var(--ink-soft);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+
+  /* —— 年份：手写大字 + 细线 —— */
+  .year-mark {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-top: 2rem;
+    color: var(--seal);
+    font-family: var(--ff-hand);
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1;
+    text-shadow: 0 1px 0 color-mix(in srgb, var(--seal) 12%, transparent);
+  }
+  .year-mark::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: linear-gradient(
+      90deg,
+      var(--rule-strong),
+      color-mix(in srgb, var(--seal) 18%, transparent)
+    );
+  }
+  .year-mark:first-child {
+    margin-top: 0.5rem;
+  }
+
+  /* —— 前篇 / 后篇 —— */
+  .pager {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+  @media (width >= 640px) {
+    .pager {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .pager a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 0.95rem 1.125rem;
+    box-shadow: var(--shadow-sm);
+    transition:
+      border-color var(--dur) ease,
+      box-shadow var(--dur) var(--ease-out),
+      transform var(--dur-slow) var(--ease-spring);
+  }
+  .pager a:hover {
+    border-color: color-mix(in srgb, var(--wisteria) 55%, var(--rule));
+    box-shadow: var(--shadow-md);
+    transform: translateX(2px);
+  }
+  .pager .older:hover {
+    transform: translateX(-2px);
+  }
+  .pager .k svg {
+    transition: transform var(--dur) var(--ease-spring);
+  }
+  .pager a:hover .k svg {
+    transform: translateX(-2px);
+  }
+  .pager .older:hover .k svg {
+    transform: translateX(2px);
+  }
+  .pager .k {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    color: var(--ink-soft);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+  }
+  .pager .k svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--wisteria);
+  }
+  .pager .t {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: var(--ink);
+    font-family: var(--ff-serif);
+    font-size: 0.9875rem;
+    font-weight: 600;
+    line-height: 1.55;
+  }
+  .pager .older {
+    align-items: flex-end;
+    text-align: end;
+  }
+  @media (width >= 640px) {
+    .pager .older {
+      grid-column-start: 2;
+    }
+  }
+
+  /* —— 相关篇章 —— */
+  .related-list {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 0.75rem;
+  }
+  .related-list a {
+    display: flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--ink);
+    font-family: var(--ff-serif);
+    transition: color var(--dur) ease, transform var(--dur) var(--ease-out);
+  }
+  .related-list a::before {
+    content: "";
+    flex: none;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50% 0;
+    background: var(--w2);
+    transform: rotate(45deg);
+  }
+  .related-list a:hover {
+    color: var(--wisteria);
+    transform: translateX(2px);
+  }
+
+  /* —— 类目：目次式，名称 · 引线 · 篇数 —— */
+  .catalog {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5rem;
+  }
+  @media (width >= 640px) {
+    .catalog {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .catalog a {
+    display: flex;
+    min-height: 2.875rem;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0.7rem 0.1rem 0.55rem;
+    border-bottom: 1px solid var(--rule);
+    transition: color var(--dur) ease;
+  }
+  .catalog .name {
+    overflow: hidden;
+    color: var(--ink);
+    font-family: var(--ff-serif);
+    font-size: 0.9875rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color var(--dur) ease;
+  }
+  .catalog .name::before {
+    content: "#";
+    margin-inline-end: 0.15em;
+    color: var(--wisteria);
+    opacity: 0.75;
+  }
+  .catalog .dots {
+    min-width: 0.75rem;
+    flex: 1;
+    border-bottom: 1px dotted var(--rule-strong);
+    transform: translateY(-0.25em);
+  }
+  .catalog .count {
+    color: var(--ink-soft);
+    font-family: var(--ff-serif);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .catalog a:hover .name {
+    color: var(--wisteria);
+  }
+
+  /* —— 书目：按年的花枝时间线 —— */
+  .archive-year + .archive-year {
+    margin-top: 2.25rem;
+  }
+  .archive-year-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    color: var(--seal);
+    font-family: var(--ff-hand);
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .archive-year-title .n {
+    color: var(--ink-soft);
+    font-family: var(--ff-sans);
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+  }
+  .archive-list {
+    position: relative;
+    margin-top: 0.875rem;
+    padding-inline-start: 1.375rem;
+  }
+  .archive-list::before {
+    content: "";
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 0.32rem;
+    border-inline-start: 1px dashed var(--rule-strong);
+  }
+  .archive-list li {
+    position: relative;
+  }
+  .archive-list li::before {
+    content: "";
+    position: absolute;
+    top: 1.05rem;
+    left: -1.25rem;
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50% 0;
+    background: var(--w2);
+    transform: rotate(45deg) scale(1);
+    transition:
+      background-color var(--dur) ease,
+      transform var(--dur) var(--ease-spring);
+  }
+  .archive-list li:hover::before {
+    background: var(--wisteria);
+    transform: rotate(45deg) scale(1.4);
+  }
+  .archive-list a {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: baseline;
+    gap: 0.875rem;
+    padding-block: 0.55rem;
+    color: var(--ink);
+    transition: color var(--dur) ease, transform var(--dur) var(--ease-out);
+  }
+  .archive-list time {
+    flex: none;
+    width: 2.75rem;
+    color: var(--ink-soft);
+    font-family: var(--ff-serif);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .archive-list .t {
+    font-family: var(--ff-serif);
+    line-height: 1.6;
+  }
+  .archive-list a:hover {
+    color: var(--wisteria);
+    transform: translateX(2px);
+  }
+
+  /* —— 分页 —— */
+  .page-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+  }
+  .page-now {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    border-radius: 999px;
+    padding-inline: 1rem;
+    color: var(--ink-soft);
+    font-family: var(--ff-serif);
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+    transition:
+      background-color var(--dur) ease,
+      color var(--dur) ease;
+  }
+  .page-now:hover {
+    background: var(--paper-deep);
+    color: var(--ink);
+  }
+  .page-now b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .page-pop {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    z-index: 50;
+    margin-bottom: 0.75rem;
+    transform: translateX(-50%);
+  }
+  .page-pop-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 1.25rem;
+    background: var(--surface);
+    padding: 0.5rem;
+    box-shadow: var(--shadow-lg);
+  }
+  .page-pop input {
+    width: 4.25rem;
+    height: 2.5rem;
+    padding-inline: 0.5rem;
+    border-radius: 999px;
+    font-size: 1rem;
+    text-align: center;
+  }
+  .page-pop button {
+    height: 2.5rem;
+    flex: none;
+    border-radius: 999px;
+    background: var(--wisteria);
+    padding-inline: 1.1rem;
+    color: var(--paper);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    transition: background-color var(--dur) ease;
+  }
+  .page-pop button:hover {
+    background: var(--wisteria-deep);
+  }
+  #page-input[aria-invalid="true"] {
+    border-color: var(--seal);
+    box-shadow: 0 0 0 4px var(--seal-soft);
+  }
+
+  /* —— 邮戳（404：查无此页，原信退回） —— */
+  .postmark {
+    position: absolute;
+    top: -1.5rem;
+    right: -0.35rem;
+    display: grid;
+    width: 6.25rem;
+    height: 6.25rem;
+    place-items: center;
+    align-content: center;
+    gap: 0.1rem;
+    border: 2px solid currentColor;
+    border-radius: 999px;
+    color: color-mix(in srgb, var(--seal) 78%, transparent);
+    opacity: 0.85;
+    box-shadow:
+      inset 0 0 0 4px var(--surface),
+      inset 0 0 0 5px currentColor;
+    font-family: var(--ff-serif);
+    line-height: 1;
+    transform: rotate(-14deg);
+    background: var(--surface);
+  }
+  .postmark .pm-s {
+    font-size: 0.625rem;
+    letter-spacing: 0.2em;
+  }
+  .postmark .pm-b {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+}
+
+/* ================================================================
+ * 阅读增强：侧栏目次 / 代码复制 / 图片放大 / 续读
+ * ================================================================ */
+@layer components {
+  .post-toc {
+    display: none;
+  }
+  @media (width >= 1280px) {
+    .post-toc {
+      position: fixed;
+      top: 7rem;
+      left: calc(50% + var(--measure) / 2 + 3rem);
+      display: block;
+      width: 13rem;
+      max-height: calc(100vh - 12rem);
+      overflow-y: auto;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+    }
+  }
+  .post-toc-title {
+    margin-bottom: 0.6rem;
+  }
+  .post-toc ol {
+    border-inline-start: 1px solid var(--rule);
+  }
+  .post-toc li.sub {
+    padding-inline-start: 0.75rem;
+  }
+  .post-toc a {
+    display: block;
+    margin-inline-start: -1px;
+    border-inline-start: 2px solid transparent;
+    padding: 0.22rem 0 0.22rem 0.8rem;
+    color: var(--ink-soft);
+    transition:
+      color var(--dur) ease,
+      border-color var(--dur) ease;
+  }
+  .post-toc a:hover {
+    color: var(--wisteria);
+  }
+  .post-toc a[aria-current="true"] {
+    border-color: var(--wisteria);
+    color: var(--wisteria);
+    font-weight: 600;
+  }
+
+  .code-wrap {
+    position: relative;
+  }
+  .code-copy {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 1.75rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+    padding: 0.1rem 0.65rem;
+    color: var(--ink-soft);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    opacity: 0;
+    transition:
+      opacity var(--dur) ease,
+      color var(--dur) ease,
+      border-color var(--dur) ease,
+      transform var(--dur) var(--ease-spring);
+  }
+  .cc-icon svg {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+  .code-wrap:hover .code-copy,
+  .code-copy:focus-visible,
+  .code-copy[data-done] {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .code-copy {
+      opacity: 0.9;
+    }
+  }
+  .code-copy:hover {
+    border-color: var(--wisteria);
+    color: var(--wisteria);
+    transform: translateY(-1px);
+  }
+  .code-copy[data-done] {
+    border-color: var(--seal);
+    color: var(--seal);
+  }
+  .code-copy[data-done] .cc-icon {
+    animation: cc-check 320ms var(--ease-spring);
+  }
+  @keyframes cc-check {
+    0% {
+      transform: scale(0.6);
+    }
+    60% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  #article img {
+    cursor: zoom-in;
+  }
+  #article a img {
+    cursor: pointer;
+  }
+  .img-zoom {
+    max-width: 100vw;
+    max-height: 100vh;
+    margin: auto;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: zoom-out;
+  }
+  .img-zoom::backdrop {
+    background: rgb(28 22 16 / 84%);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .img-zoom img {
+    max-width: 94vw;
+    max-height: 90vh;
+    border: 6px solid var(--surface);
+    border-radius: var(--radius-sm);
+    object-fit: contain;
+    animation: zoom-in 240ms var(--ease-spring);
+  }
+  @keyframes zoom-in {
+    from {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+  }
+}

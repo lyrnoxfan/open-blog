@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Blog" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">#5B8DEF</item>
+        <item name="android:colorPrimaryDark">#3B6FD4</item>
+        <item name="android:colorAccent">#F472B6</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">#F5F8FF</item>
+    </style>
+</resources>

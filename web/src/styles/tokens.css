@@ -1,0 +1,160 @@
+/*
+ * 藤笺 · 设计令牌（唯一来源）
+ * ---------------------------------------------------------------
+ * 纸：暖米色信纸；墨：深褐近黑；藤：紫藤主色（交互）；印：赭色（印章 / 手写 / 落款）。
+ * 组件只引用这里的变量或 Tailwind 主题色，不写死颜色。
+ *
+ * 另有三处无法引用本文件，各存一份同名副本，改色时请一起改：
+ *   functions/_middleware.js          密码页
+ *   public/desk/index.html          写作台
+ *   src/utils/og-templates/letter.js  分享图
+ */
+
+/* 浅色：暖米色信纸 */
+:root,
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --paper: #f3ebdf;
+  --paper-deep: #ebe0d0;
+  --surface: #fffaf3;
+  --ink: #26221d;
+  --ink-soft: #5f574d;
+  --ink-faint: #8a7f72;
+  --rule: #e2d6c4;
+  --rule-strong: #d0c1ab;
+
+  --wisteria: #67498f;
+  --wisteria-deep: #523677;
+  --wisteria-soft: #e7ddf0;
+  --wisteria-mist: #f3edf3;
+  --seal: #a13f04;
+  --seal-soft: #f6dfcb;
+  --highlight: #ffe3c0;
+  --tape: rgb(196 176 222 / 55%);
+
+  /* 紫藤：花穗五档（花梗 → 花尖由深到浅）、花苞、藤蔓、叶 */
+  --w0: #5d4291;
+  --w1: #7b5fb3;
+  --w2: #9a82c9;
+  --w3: #bba9dd;
+  --w4: #dcd0ee;
+  --bud: #c9cfae;
+  --vine: #7a6a58;
+  --leaf: #7c8c63;
+  --leaf-2: #9aa97f;
+
+  /* 信纸横格线 */
+  --lines: rgb(161 63 4 / 7%);
+
+  --shadow-sm: 0 1px 2px rgb(111 101 85 / 8%), 0 2px 8px rgb(111 101 85 / 8%);
+  --shadow-md:
+    0 2px 3px rgb(111 101 85 / 8%), 0 14px 30px -18px rgb(35 34 31 / 30%);
+  --shadow-lg:
+    0 3px 6px rgb(111 101 85 / 10%), 0 24px 44px -20px rgb(35 34 31 / 36%);
+  --grain-opacity: 0.06;
+}
+
+/* 深色：灯下旧信——暖褐纸底叠烛光、暖米白墨色，紫藤化月光 */
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #1f1810;
+  --paper-deep: #271e15;
+  --surface: #2a2017;
+  --ink: #ece1cc;
+  --ink-soft: #b6a78f;
+  --ink-faint: #847561;
+  --rule: #382c20;
+  --rule-strong: #4a3a2b;
+
+  --wisteria: #b8a3df;
+  --wisteria-deep: #cab6f0;
+  --wisteria-soft: #3a2f3f;
+  --wisteria-mist: #2b2326;
+  --seal: #d9884a;
+  --seal-soft: #432e1d;
+  --highlight: #6b4423;
+  --tape: rgb(170 150 200 / 28%);
+
+  /* 夜里的紫藤：降饱和、提价光，像月光照在花上 */
+  --w0: #8268b8;
+  --w1: #9580c8;
+  --w2: #8d78be;
+  --w3: #735f9c;
+  --w4: #534a72;
+  --bud: #555b40;
+  --vine: #64523f;
+  --leaf: #5d6a47;
+  --leaf-2: #4d5839;
+
+  --lines: rgb(217 136 74 / 7%);
+
+  /* 烛光晕：用于 body::after 在暗色下叠一层暖光 */
+  --candle: rgb(255 200 120 / 6%);
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 35%);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 30%), 0 14px 32px -16px rgb(0 0 0 / 65%);
+  --shadow-lg: 0 4px 8px rgb(0 0 0 / 35%), 0 24px 46px -18px rgb(0 0 0 / 75%);
+  --grain-opacity: 0.045;
+}
+
+:root {
+  /* 标题用宋体系衬线（信笺感），正文用无衬线（手机长读更清楚） */
+  --ff-serif:
+    "Noto Serif SC Variable", "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong",
+    "Noto Serif CJK SC", Georgia, serif;
+  --ff-sans:
+    system-ui, -apple-system, "PingFang SC", "HarmonyOS Sans SC", "MiSans",
+    "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  /* 手写与签名（只用于西文点缀，中文自动回落到衬线） */
+  --ff-hand: "Caveat", var(--ff-serif);
+  --ff-sig: "Oooh Baby", "Caveat", var(--ff-serif);
+  --ff-mono:
+    var(--font-google-sans-code), ui-monospace, "SFMono-Regular", "Menlo",
+    monospace;
+
+  --radius-sm: 0.5rem;
+  --radius: 0.875rem;
+  --radius-lg: 1.25rem;
+  --measure: 44rem; /* 正文栏宽 ≈ 38 个汉字 @17px */
+  --gutter: 1.25rem;
+  /* —— 动效令牌 —— */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur: 180ms;
+  --dur-fast: 120ms;
+  --dur-slow: 320ms;
+  --dock-h: 4.25rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (width >= 640px) {
+  :root {
+    --gutter: 1.5rem;
+  }
+}
+
+/* Tailwind 主题：把令牌暴露为 bg-paper / text-ink / border-rule … */
+@theme inline {
+  --font-sans: var(--ff-sans);
+  --font-serif: var(--ff-serif);
+  --font-mono: var(--ff-mono);
+  --font-hand: var(--ff-hand);
+  --font-sig: var(--ff-sig);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-wisteria: var(--wisteria);
+  --color-wisteria-deep: var(--wisteria-deep);
+  --color-wisteria-soft: var(--wisteria-soft);
+  --color-wisteria-mist: var(--wisteria-mist);
+  --color-seal: var(--seal);
+  --color-seal-soft: var(--seal-soft);
+}

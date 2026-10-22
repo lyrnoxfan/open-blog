@@ -1,0 +1,104 @@
+---
+import "@pagefind/default-ui/css/ui.css";
+import Main from "@/layouts/Main.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import { SITE } from "@/config";
+
+const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
+---
+
+<Layout title={`寻章 | ${SITE.title}`}>
+  <Header />
+  <Main
+    eyebrow="寻章"
+    pageTitle="寻章"
+    pageDesc="一字一句，皆可寻得。"
+  >
+    <div id="pagefind-search" data-backurl={backUrl}></div>
+  </Main>
+</Layout>
+
+<script>
+  function initSearch() {
+    const pageFindSearch: HTMLElement | null =
+      document.querySelector("#pagefind-search");
+
+    if (!pageFindSearch) return;
+
+    const params = new URLSearchParams(window.location.search);
+
+    const onIdle = window.requestIdleCallback || (cb => setTimeout(cb, 1));
+
+    onIdle(async () => {
+      // @ts-expect-error — Missing types for @pagefind/default-ui package.
+      const { PagefindUI } = await import("@pagefind/default-ui");
+
+      // Display warning inn dev mode
+      if (import.meta.env.DEV) {
+        pageFindSearch.innerHTML = `
+            <div class="mb-4 space-y-3 rounded-2xl border border-rule bg-surface p-4 text-sm">
+              <p><strong>开发模式提示：</strong>需要先构建一次项目，才能在开发时看到搜索结果。</p>
+              <code class="block rounded bg-paper-deep px-2 py-1">pnpm run build</code>
+            </div>
+          `;
+      }
+
+      // Init pagefind ui
+      const search = new PagefindUI({
+        element: "#pagefind-search",
+        showImages: false,
+        showSubResults: true,
+        translations: {
+          placeholder: "输入字句…",
+          clear_search: "清除",
+          load_more: "再看些",
+          search_label: "寻章",
+          zero_results: "未寻得与「[SEARCH_TERM]」相关的篇章",
+          many_results: "寻得 [COUNT] 篇与「[SEARCH_TERM]」相关",
+          one_result: "寻得 1 篇与「[SEARCH_TERM]」相关",
+          searching: "正在寻找「[SEARCH_TERM]」…",
+        },
+        processTerm: function (term: string) {
+          params.set("q", term); // Update the `q` parameter in the URL
+          history.replaceState(history.state, "", "?" + params.toString()); // Push the new URL without reloading
+
+          const backUrl = pageFindSearch?.dataset?.backurl;
+          sessionStorage.setItem("backUrl", backUrl + "?" + params.toString());
+
+          return term;
+        },
+      });
+
+      // If search param exists (eg: search?q=astro), trigger search
+      const query = params.get("q");
+      if (query) {
+        search.triggerSearch(query);
+      }
+
+      // Reset search param if search input is cleared
+      const searchInput = document.querySelector(".pagefind-ui__search-input");
+      // Pagefind 只给输入框 title，没有可见/可访问标签（axe: label-title-only）
+      searchInput?.setAttribute("aria-label", "搜索文章");
+      const clearButton = document.querySelector(".pagefind-ui__search-clear");
+      searchInput?.addEventListener("input", resetSearchParam);
+      clearButton?.addEventListener("click", resetSearchParam);
+
+      function resetSearchParam(e: Event) {
+        if ((e.target as HTMLInputElement)?.value.trim() === "") {
+          history.replaceState(history.state, "", window.location.pathname);
+        }
+      }
+    });
+  }
+
+  document.addEventListener("astro:after-swap", () => {
+    const pagefindSearch = document.querySelector("#pagefind-search");
+
+    // if pagefind search form already exists, don't initialize search component
+    if (pagefindSearch && pagefindSearch.querySelector("form")) return;
+
+    initSearch();
+  });
+  initSearch();
+</script>

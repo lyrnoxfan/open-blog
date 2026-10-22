@@ -1,0 +1,33 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import { SITE } from "@/config";
+---
+
+<Layout title={`404 | ${SITE.title}`}>
+  <Header />
+  <main
+    id="main-content"
+    class="app-layout flex flex-1 items-center justify-center"
+  >
+    <div class="jian rise w-full max-w-sm px-6 pt-12 pb-9 text-center">
+      <span class="postmark" aria-hidden="true">
+        <span class="pm-s">查无此页</span>
+        <span class="pm-b">退</span>
+        <span class="pm-s">404</span>
+      </span>
+      <p class="font-hand text-2xl text-seal">Return to sender ·</p>
+      <h1 class="mt-3 text-6xl font-semibold tracking-wider text-ink">404</h1>
+      <p class="mt-4 font-serif text-lg">所寻之页，已不在此</p>
+      <p class="mt-1 text-sm text-ink-soft">或已迁去，或从未有过。</p>
+      <div class="mt-7 flex justify-center gap-3">
+        <a href="/" class="btn btn-primary">
+          回卷首
+        </a>
+        <a href="/search/" class="btn">
+          寻章
+        </a>
+      </div>
+    </div>
+  </main>
+</Layout>

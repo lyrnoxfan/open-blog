@@ -1,0 +1,42 @@
+---
+import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
+import { SITE } from "@/config";
+---
+
+{SITE.showBackButton && (
+  <nav class="relative z-10 app-layout" aria-label="返回上一页">
+    <a id="back-button" href="/" class="back-link">
+      <IconChevronLeft class="size-5 rtl:rotate-180" aria-hidden="true" />
+      <span>返回</span>
+    </a>
+  </nav>
+)}
+
+<script>
+  // 回到进入文章前的列表页（首页 / 列表 / 标签 / 搜索结果）
+  const backButton = document.querySelector<HTMLAnchorElement>("#back-button");
+  const backUrl = sessionStorage.getItem("backUrl");
+  if (backUrl && backButton) backButton.href = backUrl;
+</script>
+
+<style>
+  .back-link {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: 0.15rem;
+    margin-inline-start: -0.6rem;
+    border-radius: 999px;
+    padding-inline: 0.5rem 0.85rem;
+    color: var(--ink-soft);
+    font-size: 0.875rem;
+    letter-spacing: 0.06em;
+    transition:
+      color var(--dur) ease,
+      background-color var(--dur) ease;
+  }
+  .back-link:hover {
+    background: var(--paper-deep);
+    color: var(--wisteria);
+  }
+</style>

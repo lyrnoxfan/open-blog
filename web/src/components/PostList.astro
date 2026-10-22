@@ -1,0 +1,30 @@
+---
+/**
+ * 文章列表：/posts 与 /tags/[tag] 共用，按年份分组（年份为手写赭色大字）。
+ */
+import type { CollectionEntry } from "astro:content";
+import PostItem from "./PostItem.astro";
+import { toZoned } from "@/utils/date";
+
+type Props = { posts: CollectionEntry<"blog">[] };
+const { posts } = Astro.props;
+
+const groups: { year: number; posts: CollectionEntry<"blog">[] }[] = [];
+for (const post of posts) {
+  const year = toZoned(post.data.pubDatetime, post.data.timezone).year();
+  const last = groups.at(-1);
+  if (last && last.year === year) last.posts.push(post);
+  else groups.push({ year, posts: [post] });
+}
+---
+
+{groups.map(group => (
+  <section aria-label={`${group.year} 年`}>
+    <h2 class="year-mark">{group.year}</h2>
+    <ul>
+      {group.posts.map(post => (
+        <PostItem post={post} as="h3" />
+      ))}
+    </ul>
+  </section>
+))}

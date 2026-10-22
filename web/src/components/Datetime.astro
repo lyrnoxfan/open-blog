@@ -1,0 +1,19 @@
+---
+import { formatDateZh, toZoned } from "@/utils/date";
+
+type Props = {
+  class?: string;
+  pubDatetime: string | Date;
+  timezone?: string;
+};
+
+// 只展示发布时间（不显示「更新于」）
+const { pubDatetime, timezone, class: className = "" } = Astro.props;
+---
+
+<time
+  class:list={["tabular-nums", className]}
+  datetime={toZoned(pubDatetime, timezone).toISOString()}
+>
+  {formatDateZh(pubDatetime, timezone)}
+</time>

@@ -1,0 +1,20 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "twikoo"
+main = "src/index.js"
+compatibility_flags = ["nodejs_compat"]
+compatibility_date = "2024-09-23"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "twikoo"
+database_id = "your-d1-database-id"   # 换成 `npx wrangler d1 create twikoo` 输出的 id
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "twikoo"                # 评论区上传的图片存这里
+
+[vars]
+R2_PUBLIC_URL = "https://twikoo-img.example.com"   # R2 桶绑定的公开访问域名
+
+[dev]
+port = 5000

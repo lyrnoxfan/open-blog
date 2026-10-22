@@ -1,0 +1,62 @@
+---
+/**
+ * 文章侧栏目次：仅在宽屏（≥1280px）显示，固定在正文栏右侧，滚动时高亮当前小节。
+ */
+import type { MarkdownHeading } from "astro";
+
+type Props = { headings: MarkdownHeading[] };
+const items = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
+---
+
+{items.length >= 2 && (
+  <aside class="post-toc" aria-label="目次" data-pagefind-ignore>
+    <p class="post-toc-title eyebrow">目次</p>
+    <ol>
+      {items.map(h => (
+        <li class:list={[h.depth === 3 && "sub"]}>
+          <a href={`#${h.slug}`} data-toc-link={h.slug}>
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ol>
+  </aside>
+)}
+
+<script>
+  function initToc() {
+    const links = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]")
+    );
+    if (!links.length) return;
+    const targets = links
+      .map(a => document.getElementById(a.dataset.tocLink!))
+      .filter((el): el is HTMLElement => !!el);
+
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const line = window.innerHeight * 0.25;
+      let current: string | null = null;
+      for (const el of targets) {
+        if (el.getBoundingClientRect().top <= line) current = el.id;
+        else break;
+      }
+      for (const a of links) {
+        if (a.dataset.tocLink === current)
+          a.setAttribute("aria-current", "true");
+        else a.removeAttribute("aria-current");
+      }
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    update();
+  }
+  initToc();
+  document.addEventListener("astro:page-load", initToc);
+</script>

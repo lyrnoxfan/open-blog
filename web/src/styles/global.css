@@ -1,0 +1,17 @@
+/*
+ * 藤笺 · 样式入口
+ *   tokens.css      设计令牌（颜色 / 字体 / 尺寸）
+ *   base.css        元素基线、纸纹、布局、页面动效
+ *   components.css  站内通用组件（印章、信笺、列表、按钮、页头……）
+ *   prose.css       正文排版与代码高亮
+ *   vendor.css      第三方：Pagefind 搜索
+ * Dock、紫藤、评论等组件的样式写在各自的 .astro 文件里。
+ */
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./base.css";
+@import "./components.css";
+@import "./prose.css";
+@import "./vendor.css";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));

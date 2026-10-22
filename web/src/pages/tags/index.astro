@@ -1,0 +1,39 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Main from "@/layouts/Main.astro";
+import Header from "@/components/Header.astro";
+import getUniqueTags from "@/utils/getUniqueTags";
+import { SITE } from "@/config";
+
+const posts = await getCollection("blog");
+const tags = getUniqueTags(posts);
+---
+
+<Layout title={`类目 | ${SITE.title}`}>
+  <Header />
+  <Main
+    eyebrow="类目"
+    pageTitle="类目"
+    pageDesc={`凡 ${tags.length} 类。`}
+  >
+    {tags.length > 0 ? (
+      <ul class="catalog">
+        {tags.map(({ tag, tagName, count }) => (
+          <li>
+            <a href={`/tags/${tag}/`}>
+              <span class="name">{tagName}</span>
+              <span class="dots" aria-hidden="true" />
+              <span class="count">
+                {count}
+                <span class="sr-only"> 篇</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="text-ink-soft">尚无类目。</p>
+    )}
+  </Main>
+</Layout>

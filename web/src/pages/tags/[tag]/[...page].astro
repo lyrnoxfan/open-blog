@@ -1,0 +1,50 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Main from "@/layouts/Main.astro";
+import Header from "@/components/Header.astro";
+import PostList from "@/components/PostList.astro";
+import Pagination from "@/components/Pagination.astro";
+import getUniqueTags from "@/utils/getUniqueTags";
+import getSortedPosts from "@/utils/getSortedPosts";
+import { slugifyStr } from "@/utils/slugify";
+import { SITE } from "@/config";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  const tags = getUniqueTags(posts);
+
+  return tags.flatMap(({ tag, tagName }) => {
+    const tagPosts = getSortedPosts(
+      posts.filter(post =>
+        (post.data.tags ?? []).map(t => slugifyStr(t)).includes(tag)
+      )
+    );
+    return paginate(tagPosts, {
+      params: { tag },
+      props: { tagName },
+      pageSize: SITE.postPerPage,
+    });
+  });
+}) satisfies GetStaticPaths;
+
+const { page, tagName } = Astro.props;
+---
+
+<Layout title={`#${tagName} | ${SITE.title}`}>
+  <Header />
+  <Main
+    eyebrow="类目"
+    pageTitle={`# ${tagName}`}
+    pageDesc={`凡 ${page.total} 篇。`}
+  >
+    <PostList posts={page.data} />
+    <Pagination {page} />
+    <p class="mt-6 text-center">
+      <a href="/tags/" class="text-link">
+        ← 全部类目
+      </a>
+    </p>
+  </Main>
+</Layout>

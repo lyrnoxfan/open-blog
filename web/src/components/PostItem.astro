@@ -1,0 +1,38 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getPath } from "@/utils/getPath";
+import { toZoned, transitionName } from "@/utils/date";
+
+type Props = {
+  post: CollectionEntry<"blog">;
+  /** 标题层级：列表页用 h3（年份是 h2），首页「近作」区同样用 h3 */
+  as?: "h2" | "h3";
+};
+
+const MONTHS = "一二三四五六七八九十";
+const monthZh = (m: number) =>
+  (m <= 10 ? MONTHS[m - 1] : `十${MONTHS[m - 11]}`) + "月";
+
+const { post, as: Heading = "h2" } = Astro.props;
+const { title, description, pubDatetime, timezone, pinned } = post.data;
+const date = toZoned(pubDatetime, timezone);
+---
+
+<li class="post-item">
+  <a href={getPath(post.id, post.filePath)}>
+    <time class="post-date" datetime={date.toISOString()}>
+      <span class="d">{date.format("DD")}</span>
+      <span class="m">{monthZh(date.month() + 1)}</span>
+    </time>
+    <div class="min-w-0">
+      <Heading
+        class="post-title"
+        style={{ viewTransitionName: transitionName(post.id) }}
+      >
+        {pinned && <span class="post-pin">置顶</span>}
+        {title}
+      </Heading>
+      {description && <p class="post-desc">{description}</p>}
+    </div>
+  </a>
+</li>

@@ -1,0 +1,216 @@
+/* ================================================================
+ * 基线
+ * ================================================================ */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--rule);
+  }
+
+  html {
+    overflow-y: scroll;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    position: relative;
+    display: flex;
+    min-height: 100svh;
+    flex-direction: column;
+    /* 装饰（水印、邮戳、花帘）偶尔探出版心，一律裁掉，不出现横向滚动 */
+    overflow-x: clip;
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--ff-sans);
+    font-size: 1rem;
+    line-height: 1.75;
+    /* 中文排版：中西文自动间距、标点挤压、严格断行 */
+    text-autospace: normal;
+    text-spacing-trim: normal;
+    line-break: strict;
+    font-kerning: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* 昼夜切换时纸色与墨色柔和过渡，不闪屏 */
+    transition:
+      background-color var(--dur-slow) var(--ease-soft),
+      color var(--dur-slow) var(--ease-soft);
+  }
+
+  /* 纸：一层极淡的纤维噪点 + 四角微微压暗，像放久了的信纸 */
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  body::before {
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.25 0 0 0 0 0.15 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  body::after {
+    background: radial-gradient(
+      120% 90% at 50% 40%,
+      transparent 60%,
+      color-mix(in srgb, var(--paper-deep) 70%, transparent) 100%
+    );
+  }
+  /* 暗色：叠一层烛光暖晕（中心偏暖偏亮、四角更深），像灯下读旧信 */
+  html[data-theme="dark"] body::after {
+    background:
+      radial-gradient(
+        90% 70% at 50% 35%,
+        var(--candle) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        130% 100% at 50% 45%,
+        transparent 50%,
+        color-mix(in srgb, var(--paper-deep) 85%, transparent) 100%
+      );
+  }
+
+  ::selection {
+    background: var(--highlight);
+    color: var(--ink);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--ff-serif);
+    text-wrap: balance;
+    text-spacing-trim: trim-start;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  a,
+  button,
+  summary,
+  [tabindex] {
+    outline-offset: 3px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--wisteria);
+    border-radius: 4px;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  :target {
+    scroll-margin-block: 1.5rem;
+  }
+
+  input:where(
+    :not(
+      [type="checkbox"],
+      [type="radio"],
+      [type="range"],
+      [type="hidden"],
+      [type="submit"],
+      [type="button"],
+      [type="reset"]
+    )
+  ),
+  textarea,
+  select {
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    color: var(--ink);
+    transition:
+      border-color var(--dur) ease,
+      box-shadow var(--dur) ease;
+  }
+  input:where(
+      :not(
+        [type="checkbox"],
+        [type="radio"],
+        [type="range"],
+        [type="hidden"],
+        [type="submit"],
+        [type="button"],
+        [type="reset"]
+      )
+    ):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    border-color: var(--wisteria);
+    outline: none;
+    box-shadow: 0 0 0 4px var(--wisteria-soft);
+  }
+}
+
+/* ================================================================
+ * 布局
+ * ================================================================ */
+@utility app-layout {
+  width: 100%;
+  max-width: calc(var(--measure) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* 底部给 Dock 让位 */
+.dock-spacer {
+  height: calc(var(--dock-h) + 2.5rem + var(--safe-bottom));
+  flex: none;
+}
+
+/* ================================================================
+ * 动效：页面切换与进场（尊重「减少动态效果」）
+ * ================================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 220ms;
+    animation-timing-function: var(--ease-out);
+  }
+  .rise {
+    animation: rise 360ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+  /* 固定 stagger 档位：避免为一行自定义属性写 inline style（html-validate） */
+  .rise-1 {
+    --i: 1;
+  }
+  .rise-3 {
+    --i: 3;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    /* 只动 opacity/transform（合成层），不动 filter：长文整块做模糊动画在手机上会掉帧 */
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,7 @@
+# Git 集成部署时，KV 绑定以 Cloudflare Pages 项目配置为准，本文件仅作记录。
+name = "my-blog"
+compatibility_date = "2025-06-01"
+
+[[kv_namespaces]]
+binding = "AUTH_BANS"
+id = "your-kv-namespace-id"
